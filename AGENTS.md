@@ -15,8 +15,9 @@ Estas instrucciones aplican a todo el árbol del proyecto (`skillbase`).
 1. Mantener el código en JavaScript ESM (`"type": "module"`).
 2. Evitar dependencias externas salvo necesidad clara.
 3. Toda lógica de negocio va en `src/core.js`; `src/cli.js` sólo parsea/coordina comandos.
-4. Mantener mensajes de CLI en español (consistentes con README actual).
-5. Si agregas o cambias comandos, actualiza:
+4. Toda visualización de estado sucede en `src/cli.js`.
+5. Mantener mensajes de CLI en español (consistentes con README actual).
+6. Si agregas o cambias comandos, actualiza:
    - ayuda en `src/cli.js`
    - sección de comandos en `README.md`
 
@@ -24,6 +25,10 @@ Estas instrucciones aplican a todo el árbol del proyecto (`skillbase`).
 - Usar integración propia (sin dependencias externas) para detectar stack.
 - Basarse en señales del proyecto (`package.json`, `requirements.txt`, etc).
 - Si cambias este comportamiento, documenta el motivo en README.
+
+## Listado
+- `skillbase ls` lista las skills globales.
+- `skillbase ls --project` (o `-p`) lista las instaladas en el proyecto actual (`.agents/skills`).
 
 ## Migración
 - `skillbase migrate` migra desde `~/.agents/skills` a `~/.skillbase/skills`.

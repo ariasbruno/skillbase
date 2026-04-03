@@ -3,10 +3,12 @@ import {
   addSkill,
   checkUpdates,
   getGlobalSkillsDir,
+  getProjectSkillsDir,
   initProject,
   installFromManifest,
   installRemoteSkillRef,
   listGlobalSkills,
+  listProjectSkills,
   migrateAgentsSkillsToSkillbase,
   readManifest,
   removeSkill,
@@ -19,8 +21,8 @@ function printHelp() {
 Uso:
   skillbase -h
   skillbase h
-  skillbase ls
-  skillbase l
+  skillbase ls [--project]
+  skillbase l [-p]
   skillbase init [--hard]
   skillbase add <skill> [--sym]
   skillbase add
@@ -38,7 +40,7 @@ Uso:
   skillbase m [--project] [-f]
 
 Descripción breve de comandos:
-  ls        Lista skills instaladas globalmente en ~/.skillbase/skills.
+  ls        Lista skills instaladas globalmente (~/.skillbase/skills) o del proyecto con --project.
   init      Sugiere skills globales según tecnologías del proyecto.
   add       Instala una skill global (o abre selector interactivo sin argumentos).
   install   Instala desde skillbase.json o una skill remota con --remote.
@@ -63,8 +65,8 @@ Notas:
 
 function printCommandList() {
   console.log(`Comandos disponibles:
-- skillbase ls
-- skillbase l
+- skillbase ls [--project]
+- skillbase l [-p]
 - skillbase init [--hard]
 - skillbase add
 - skillbase add <skill> [--sym]
@@ -121,12 +123,23 @@ export async function runCLI(argv) {
 
   switch (command) {
     case 'ls': {
-      const skills = await listGlobalSkills();
-      if (!skills.length) {
-        console.log(`No hay skills globales instaladas en ${getGlobalSkillsDir()}`);
+      const showProject = hasFlag(args, '--project', '-p');
+      if (showProject) {
+        const skills = await listProjectSkills();
+        if (!skills.length) {
+          console.log(`No hay skills instaladas localmente en ${getProjectSkillsDir()}`);
+        } else {
+          console.log(`Skills del proyecto (${getProjectSkillsDir()}):`);
+          skills.forEach((skill) => console.log(`- ${skill}`));
+        }
       } else {
-        console.log(`Skills globales (${getGlobalSkillsDir()}):`);
-        skills.forEach((skill) => console.log(`- ${skill}`));
+        const skills = await listGlobalSkills();
+        if (!skills.length) {
+          console.log(`No hay skills globales instaladas en ${getGlobalSkillsDir()}`);
+        } else {
+          console.log(`Skills globales (${getGlobalSkillsDir()}):`);
+          skills.forEach((skill) => console.log(`- ${skill}`));
+        }
       }
       return;
     }
@@ -142,7 +155,6 @@ export async function runCLI(argv) {
         console.log('No se encontraron skills compatibles en ~/.skillbase/skills.');
         return;
       }
-      console.log(`Skills sugeridas: ${result.suggested.join(', ')}`);
       if (result.cancelled) {
         console.log('Selección cancelada.');
         return;
@@ -158,7 +170,10 @@ export async function runCLI(argv) {
     case 'add': {
       if (!maybeSkill) {
         const result = await addSkillsInteractive({ sym: hasFlag(args, '--sym', '-s') });
-        if (result.cancelled) return;
+        if (result.cancelled) {
+          console.log('Selección cancelada.');
+          return;
+        }
         if (!result.selected.length) {
           console.log('No se seleccionaron skills para instalar.');
           return;

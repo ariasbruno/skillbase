@@ -4,6 +4,8 @@
 
 `skillbase` es un CLI de Node.js que te permite administrar las skills de tus agentes de Inteligencia Artificial utilizando enlaces simbólicos (symlinks) o instalaciones locales por cada workspace, evitando la saturación del contexto.
 
+![demo](artifacts/skillbase-demo.gif)
+
 ---
 
 ## 🤔 El Problema: Saturación de Contexto (Context Bloat)
@@ -59,7 +61,7 @@ skillbase install
 
 | Comando | Alias | Descripción |
 | :--- | :--- | :--- |
-| `skillbase ls` | `l` | Lista skills instaladas globalmente en `~/.skillbase/skills`. |
+| `skillbase ls [--project]` | `l [-p]` | Lista skills globales o del proyecto con `-p`. |
 | `skillbase init [--hard]` | | Detecta tecnologías y sugiere skills (usa `--hard` para analizar `tags` en `skill.json`). |
 | `skillbase add [<skill>] [-s]` | `a` | Instalar skill global. Sin nombre, abre el **selector interactivo**. `-s` crea symlink. |
 | `skillbase install` | `i` | Instala desde el manifiesto `skillbase.json`. Soporta `-r` (remotas) y `-f` (forzar). |
@@ -75,7 +77,7 @@ skillbase install
 - `-r`, `--remote`: Indica que la operación debe consultar fuentes externas (GitHub o API de skills.sh).
 - `-f`, `--force`: Ignora errores de "ya existe" y sobrescribe archivos/configuraciones.
 - `-k`, `--skill`: Nombre de la skill específica a extraer cuando se instala desde un repositorio GitHub.
-- `-p`, `--project`: En migraciones, indica que el origen es `.agents/skills` del proyecto actual.
+- `-p`, `--project`: En `ls`, lista skills locales. En `migrate`, indica que el origen es `.agents/skills`.
 - `--g`: Flag específica de `remove` para borrar una skill del registro global.
 
 ### ⌨️ Aliases de comandos

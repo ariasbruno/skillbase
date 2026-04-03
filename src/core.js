@@ -36,6 +36,13 @@ export async function listGlobalSkills() {
   return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
 }
 
+export async function listProjectSkills(cwd = process.cwd()) {
+  const projectSkillsDir = getProjectSkillsDir(cwd);
+  if (!(await exists(projectSkillsDir))) return [];
+  const entries = await fs.readdir(projectSkillsDir, { withFileTypes: true });
+  return entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
+}
+
 async function copyDir(src, dst) {
   await fs.cp(src, dst, { recursive: true, force: true });
 }
@@ -237,7 +244,6 @@ async function selectSkillsFromList(skills, { title, requireTTYMessage } = {}) {
   output.write('\n');
 
   if (outcome.cancelled) {
-    output.write('\nSelección cancelada.\n');
     return { selected: [], cancelled: true };
   }
 
