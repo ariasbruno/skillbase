@@ -27,7 +27,7 @@ Imagínate que estás trabajando en el frontend de un e-commerce. No necesitas q
 Instala el paquete globalmente:
 
 ```bash
-npm install -g skillbase
+npm install -g @ariasbruno/skillbase
 # O clona y linkea localmente:
 # npm link
 ```
