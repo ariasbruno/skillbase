@@ -1,6 +1,6 @@
 {
   "name": "@ariasbruno/skillbase",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI para administrar skills locales y remotas entre proyectos",
   "type": "module",
   "bin": {
