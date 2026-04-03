@@ -1,0 +1,33 @@
+{
+  "name": "skillbase",
+  "version": "0.1.0",
+  "description": "CLI para administrar skills locales y remotas entre proyectos",
+  "type": "module",
+  "bin": {
+    "skillbase": "bin/skillbase.js"
+  },
+  "scripts": {
+    "start": "node bin/skillbase.js -h",
+    "lint": "node --check bin/skillbase.js && node --check src/cli.js && node --check src/core.js"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "AGENTS.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "skills",
+    "cli",
+    "agents",
+    "ai",
+    "context",
+    "bloat",
+    "developer-tools"
+  ]
+}
