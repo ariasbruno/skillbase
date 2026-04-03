@@ -32,8 +32,15 @@ export async function detectProjectTechnologies(cwd = process.cwd(), { hard = fa
     add('javascript', 'node', 'npm');
     const deps = {
       ...(packageJson.dependencies ?? {}),
-      ...(packageJson.devDependencies ?? {})
+      ...(packageJson.devDependencies ?? {}),
+      ...(packageJson.peerDependencies ?? {}),
+      ...(packageJson.optionalDependencies ?? {})
     };
+
+    // Agregar todas las dependencias como tecnologías individuales
+    Object.keys(deps).forEach((name) => add(name));
+
+    // Mapeos especiales y shorthand
     if (deps.react) add('react');
     if (deps.vue) add('vue');
     if (deps.svelte) add('svelte');
