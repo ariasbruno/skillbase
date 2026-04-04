@@ -16,10 +16,11 @@ Estas instrucciones aplican a todo el árbol del proyecto (`skillbase`).
 2. Evitar dependencias externas salvo necesidad clara.
 3. Toda lógica de negocio va en `src/core.js`; `src/cli.js` sólo parsea/coordina comandos.
 4. Toda visualización de estado sucede en `src/cli.js`.
-5. Mantener mensajes de CLI en español (consistentes con README actual).
+5. Mantener soporte bilingüe (ES/EN) mediante `src/i18n.js` y sus locales.
 6. Si agregas o cambias comandos, actualiza:
    - ayuda en `src/cli.js`
-   - sección de comandos en `README.md`
+   - diccionarios en `src/locales/`
+   - secciones de comandos en `README.md` y `README_es.md`
 
 ## Flujo de recomendaciones (init)
 - Usar integración propia (sin dependencias externas) para detectar stack.
@@ -27,12 +28,12 @@ Estas instrucciones aplican a todo el árbol del proyecto (`skillbase`).
 - Si cambias este comportamiento, documenta el motivo en README.
 
 ## Listado
-- `skillbase ls` lista las skills globales.
-- `skillbase ls --project` (o `-p`) lista las instaladas en el proyecto actual (`.agents/skills`).
+- `skillbase ls` lista las skills instaladas en el proyecto actual (`.agents/skills`).
+- `skillbase ls -g` (o `--global`) lista las skills en el registro global (`~/.skillbase/skills`).
 
-## Migración
+## Migración y Promoción
 - `skillbase migrate` migra desde `~/.agents/skills` a `~/.skillbase/skills`.
-- `skillbase migrate --project` migra desde `.agents/skills` del cwd al mismo destino global.
+- `skillbase migrate --promote` (o `-p`) promueve skills del proyecto actual al registro global.
 - Mantener `--force` para sobrescritura explícita.
 
 ## Calidad mínima

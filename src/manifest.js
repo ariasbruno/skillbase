@@ -1,19 +1,15 @@
 import fs from 'node:fs/promises';
-import { getManifestPath } from './config.js';
-
-async function exists(target) {
-  try {
-    await fs.access(target);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { getManifestPath, exists } from './config.js';
 
 async function safeReadJson(file, fallback) {
   if (!(await exists(file))) return fallback;
-  const raw = await fs.readFile(file, 'utf8');
-  return JSON.parse(raw);
+  try {
+    const raw = await fs.readFile(file, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error(`Warning: Failed to parse JSON at ${file}. Using fallback.`);
+    return fallback;
+  }
 }
 
 export async function writeJson(file, data) {

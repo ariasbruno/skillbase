@@ -5,9 +5,38 @@ import * as readline from 'node:readline';
 import { stdin as input, stdout as output } from 'node:process';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { getGlobalSkillsDir, getProjectRoot, getProjectSkillsDir, PROJECT_AGENTS_DIR, PROJECT_SKILLS_DIR } from './config.js';
+import { 
+  getGlobalSkillsDir, 
+  getProjectRoot, 
+  getProjectSkillsDir, 
+  PROJECT_AGENTS_DIR, 
+  PROJECT_SKILLS_DIR,
+  exists 
+} from './config.js';
 import { readManifest, removeSkillFromManifest, upsertSkill, writeJson, writeManifest } from './manifest.js';
 import { detectProjectTechnologies } from './recommendations.js';
+import { t } from './i18n.js';
+import {
+  bold,
+  dim,
+  dim2,
+  text,
+  cyan,
+  green,
+  yellow,
+  S_DIAMOND,
+  S_POINTER,
+  S_STEP,
+  S_SQUARE,
+  S_SQUARE_FILL,
+  S_BAR,
+  S_BAR_START,
+  S_BAR_END,
+  H_HIDE_CURSOR,
+  H_SHOW_CURSOR,
+  H_CLEAR_DOWN,
+  H_MOVE_UP
+} from './styles.js';
 const execFileAsync = promisify(execFile);
 
 function nowISO() {
@@ -20,13 +49,13 @@ export async function ensureDir(dir) {
   await fs.mkdir(dir, { recursive: true });
 }
 
-async function exists(target) {
-  try {
-    await fs.access(target);
-    return true;
-  } catch {
-    return false;
-  }
+function sanitizeSkillName(name) {
+  if (typeof name !== 'string') return '';
+  
+  return name
+    .replace(/[\\/]/g, '_')   
+    .replace(/\.\./g, '')     
+    .replace(/^[.~/]+/, '');  
 }
 
 export async function listGlobalSkills() {
@@ -68,14 +97,15 @@ function compareVersion(a, b) {
 }
 
 export async function addSkill(skillName, { sym = false, cwd = process.cwd() } = {}) {
-  const globalPath = path.join(getGlobalSkillsDir(), skillName);
+  const safeName = sanitizeSkillName(skillName);
+  const globalPath = path.join(getGlobalSkillsDir(), safeName);
   if (!(await exists(globalPath))) {
-    throw new Error(`La skill global "${skillName}" no existe en ${getGlobalSkillsDir()}`);
+    throw new Error(t('ERR_GLOBAL_NOT_FOUND', { name: skillName, dir: getGlobalSkillsDir() }));
   }
 
   const projectSkillsDir = getProjectSkillsDir(cwd);
   await ensureDir(projectSkillsDir);
-  const target = path.join(projectSkillsDir, skillName);
+  const target = path.join(projectSkillsDir, safeName);
 
   if (await exists(target)) {
     await fs.rm(target, { recursive: true, force: true });
@@ -100,21 +130,21 @@ export async function addSkillsInteractive({ cwd = process.cwd(), sym = false } 
   const skills = await listGlobalSkills();
   if (!skills.length) return { selected: [], cancelled: false };
   const selection = await selectSkillsFromList(skills, {
-    title: 'Selecciona skills para instalar',
-    requireTTYMessage: 'La selección interactiva requiere una terminal TTY. Usa: skillbase add <skill>.'
+    title: t('UI_SELECT_MULTIPLE'),
+    requireTTYMessage: t('UI_REQUIRED_TTY')
   });
   if (selection.cancelled) return { selected: [], cancelled: true };
   const selectedSkills = selection.selected;
   for (const skill of selectedSkills) {
     await addSkill(skill, { cwd, sym });
   }
-  output.write(`\nInstaladas: ${selectedSkills.join(', ') || 'ninguna'}\n`);
+  output.write(`\n${t('INIT_INSTALLED', { list: selectedSkills.join(', ') || t('INIT_NONE') })}\n`);
   return { selected: selectedSkills, cancelled: false };
 }
 
-async function selectSkillsFromList(skills, { title, requireTTYMessage } = {}) {
+async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage } = {}) {
   if (!input.isTTY || !output.isTTY) {
-    throw new Error(requireTTYMessage || 'La selección interactiva requiere una terminal TTY.');
+    throw new Error(requireTTYMessage || t('UI_REQUIRED_TTY'));
   }
 
   const selected = new Set();
@@ -123,93 +153,96 @@ async function selectSkillsFromList(skills, { title, requireTTYMessage } = {}) {
   let renderedLines = 0;
   let firstRender = true;
 
-  // Tamaño de página adaptativo (mínimo 5, máximo 15 por defecto)
   const getPageSize = () => {
     const terminalRows = output.rows || 24;
-    const reservedRows = 8; // Header (5) + Footer (2) + Margen (1)
-    return Math.max(5, Math.min(15, terminalRows - reservedRows));
+    const reservedRows = 10;
+    return Math.max(5, Math.min(12, terminalRows - reservedRows));
   };
 
   readline.emitKeypressEvents(input);
   input.resume();
   if (typeof input.setRawMode === 'function') input.setRawMode(true);
 
+  output.write(H_HIDE_CURSOR);
+
   const render = () => {
     const pageSize = getPageSize();
-    
-    // Ajustar ventana (offset) según el cursor
-    if (cursor < offset) {
-      offset = cursor;
-    } else if (cursor >= offset + pageSize) {
-      offset = cursor - pageSize + 1;
-    }
+
+    if (cursor < offset) offset = cursor;
+    else if (cursor >= offset + pageSize) offset = cursor - pageSize + 1;
 
     const lines = [
-      '\x1b[36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m',
-      `\x1b[1m${title || 'Selecciona skills'}\x1b[0m`,
-      '\x1b[2m↑/↓ navegar · espacio seleccionar · enter confirmar · esc cancelar\x1b[0m',
-      '\x1b[36m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\x1b[0m',
-      ''
+      `${cyan(S_BAR_START)}  ${bold(title || t('UI_SELECT_MULTIPLE'))}`,
+      `${cyan(S_BAR)}  ${dim2(subtitle || t('UI_AVAILABLE', { count: skills.length }))}`,
+      `${cyan(S_BAR)}`
     ];
-
-    // Indicador superior si hay más arriba
-    if (offset > 0) {
-      lines.push('\x1b[2m  ▲  y más...\x1b[0m');
-    } else {
-      lines.push('');
-    }
 
     const visibleSkills = skills.slice(offset, offset + pageSize);
     visibleSkills.forEach((skill, index) => {
       const realIndex = index + offset;
       const isSelected = selected.has(skill);
       const isCursor = realIndex === cursor;
-      const mark = isSelected ? '[x]' : '[ ]';
-      const pointer = isCursor ? '\x1b[32m❯\x1b[0m' : ' ';
-      const line = `${mark} ${skill}`;
-      lines.push(isCursor ? `${pointer} \x1b[1m${line}\x1b[0m` : `${pointer} ${line}`);
+
+      const check = isSelected
+        ? cyan(S_SQUARE_FILL)
+        : dim2(S_SQUARE);
+
+      const pointer = isCursor
+        ? cyan(S_POINTER)
+        : ' ';
+
+      // Formatear nombre: owner › name (si tiene /)
+      let label = skill;
+      if (skill.includes('/')) {
+        const [owner, ...nameParts] = skill.split('/');
+        const name = nameParts.join('/');
+        const ownerPart = isCursor ? bold(owner) : dim2(owner);
+        const namePart = isSelected ? cyan(name) : (isCursor ? bold(name) : text(name));
+        label = `${ownerPart} ${dim2(S_STEP)} ${namePart}`;
+      } else {
+        label = isCursor ? bold(skill) : (isSelected ? cyan(skill) : text(skill));
+      }
+
+      lines.push(`${cyan(S_BAR)}  ${pointer} ${check} ${label}`);
     });
 
-    // Rellenar hasta pageSize para mantener altura constante (evita parpadeos)
     for (let i = visibleSkills.length; i < pageSize; i += 1) {
-      lines.push('');
+      lines.push(`${cyan(S_BAR)}`);
     }
 
-    // Indicador inferior si hay más abajo
-    if (offset + pageSize < skills.length) {
-      lines.push('\x1b[2m  ▼  y más...\x1b[0m');
-    } else {
-      lines.push('');
-    }
+    lines.push(`${cyan(S_BAR)}`);
+    const status = `(${selected.size}/${skills.length})`;
+    const page = t('UI_PAGE', { current: Math.floor(offset / pageSize) + 1, total: Math.ceil(skills.length / pageSize) });
+    const controls = t('UI_CONTROLS', { status });
+    lines.push(`${cyan(S_BAR_END)}  ${dim2(`${page} · ${controls}`)}`);
 
+    const outputContent = lines.join('\n');
     if (!firstRender) {
-      readline.moveCursor(output, 0, -renderedLines);
+      output.write('\r' + H_MOVE_UP(renderedLines));
     }
+    output.write(H_CLEAR_DOWN + outputContent);
 
-    for (let i = 0; i < lines.length; i += 1) {
-      readline.clearLine(output, 0);
-      readline.cursorTo(output, 0);
-      output.write(lines[i]);
-      if (i < lines.length - 1) output.write('\n');
-    }
-
-    // Limpiar líneas residuales si el tamaño de renderizado cambió (vía redimensionado de terminal)
-    if (!firstRender && renderedLines > lines.length) {
-      for (let i = lines.length; i < renderedLines; i += 1) {
-        output.write('\n');
-        readline.clearLine(output, 0);
-      }
-    }
-
-    output.write('\n');
-    renderedLines = lines.length + 1;
+    renderedLines = lines.length - 1;
     firstRender = false;
   };
 
   render();
+  const cleanup = () => {
+    output.write('\n' + H_SHOW_CURSOR);
+    if (typeof input.setRawMode === 'function') input.setRawMode(false);
+    input.pause();
+    input.removeListener('keypress', onKeypress);
+  };
+
   let onKeypress;
   const outcome = await new Promise((resolve) => {
     onKeypress = (_, key) => {
+      if (!key) return;
+      if (key.ctrl && key.name === 'c') {
+        cleanup();
+        resolve({ cancelled: true });
+        return;
+      }
       if (key.name === 'up') {
         cursor = (cursor - 1 + skills.length) % skills.length;
         render();
@@ -227,21 +260,27 @@ async function selectSkillsFromList(skills, { title, requireTTYMessage } = {}) {
         render();
         return;
       }
+      if (key.name === 'a') {
+        if (selected.size === skills.length) {
+          selected.clear();
+        } else {
+          skills.forEach((s) => selected.add(s));
+        }
+        render();
+        return;
+      }
       if (key.name === 'return' || key.name === 'enter') {
+        cleanup();
         resolve({ cancelled: false });
         return;
       }
-      if (key.name === 'escape' || (key.name === 'c' && key.ctrl)) {
+      if (key.name === 'escape') {
+        cleanup();
         resolve({ cancelled: true });
       }
     };
     input.on('keypress', onKeypress);
   });
-
-  if (onKeypress) input.off('keypress', onKeypress);
-  if (typeof input.setRawMode === 'function') input.setRawMode(false);
-  input.pause();
-  output.write('\n');
 
   if (outcome.cancelled) {
     return { selected: [], cancelled: true };
@@ -285,7 +324,7 @@ function parseRemoteSkillRef(skillRef) {
 async function fetchRemoteMetadata(skillRef) {
   const parsed = parseRemoteSkillRef(skillRef);
   if (!parsed.lookupKeys.length) {
-    throw new Error('Debes indicar una skill remota válida.');
+    throw new Error(t('ERR_REMOTE_INVALID'));
   }
 
   for (const key of parsed.lookupKeys) {
@@ -308,7 +347,7 @@ async function fetchRemoteMetadata(skillRef) {
   }
 
   throw new Error(
-    `No se pudo obtener metadata remota para "${skillRef}". Usa slug tipo "owner/skill" o URL de skills.sh.`
+    t('ERR_REMOTE_METADATA', { ref: skillRef })
   );
 }
 
@@ -319,12 +358,12 @@ async function downloadSkillFromRemote(skillRef, tmpDir) {
   const sourceUrl = metadata.downloadUrl || metadata.sourceUrl || metadata.repo || metadata.url;
 
   if (!sourceUrl) {
-    throw new Error(`La metadata remota de "${skillRef}" no contiene downloadUrl/sourceUrl/repo/url`);
+    throw new Error(t('ERR_REMOTE_NO_URL', { ref: skillRef }));
   }
 
   if (metadata.archiveUrl) {
     const archiveResponse = await fetch(metadata.archiveUrl);
-    if (!archiveResponse.ok) throw new Error(`No se pudo descargar archiveUrl (${archiveResponse.status})`);
+    if (!archiveResponse.ok) throw new Error(t('ERR_REMOTE_DOWNLOAD', { status: archiveResponse.status }));
     const archivePath = path.join(tmpDir, `${localName}.tgz`);
     const buffer = Buffer.from(await archiveResponse.arrayBuffer());
     await fs.writeFile(archivePath, buffer);
@@ -347,7 +386,7 @@ export async function installRemoteSkill(skillName, { cwd = process.cwd(), force
   await ensureDir(projectSkillsDir);
 
   if (/^https?:\/\/github\.com\//i.test(skillName)) {
-    throw new Error('Para instalar desde GitHub usa: skillbase install <repo-url> --remote --skill <nombre-skill>.');
+    throw new Error(t('ERR_GITHUB_USAGE'));
   }
 
   const tempBase = await fs.mkdtemp(path.join(os.tmpdir(), 'skillbase-'));
@@ -355,7 +394,7 @@ export async function installRemoteSkill(skillName, { cwd = process.cwd(), force
     const downloaded = await downloadSkillFromRemote(skillName, tempBase);
     const target = path.join(projectSkillsDir, downloaded.localName);
     if ((await exists(target)) && !force) {
-      throw new Error(`La skill "${downloaded.localName}" ya existe en el proyecto. Usa --force para reinstalar.`);
+      throw new Error(t('ERR_SKILL_EXISTS', { name: downloaded.localName }));
     }
     if (await exists(target)) await fs.rm(target, { recursive: true, force: true });
     await copyDir(downloaded.path, target);
@@ -378,7 +417,7 @@ export async function installRemoteSkill(skillName, { cwd = process.cwd(), force
 
 async function installRemoteFromGitHub(repoUrl, selectedSkill, { cwd = process.cwd(), force = false } = {}) {
   if (!selectedSkill) {
-    throw new Error('Falta --skill <nombre>. Ejemplo: skillbase install <repo-url> --remote --skill find-skills');
+    throw new Error(t('ERR_SKILL_REQUIRED'));
   }
 
   const projectSkillsDir = getProjectSkillsDir(cwd);
@@ -397,12 +436,12 @@ async function installRemoteFromGitHub(repoUrl, selectedSkill, { cwd = process.c
       }
     }
     if (!sourcePath) {
-      throw new Error(`No se encontró la skill "${selectedSkill}" en el repo remoto.`);
+      throw new Error(t('ERR_SKILL_NOT_FOUND_REMOTE', { name: selectedSkill }));
     }
 
     const target = path.join(projectSkillsDir, selectedSkill);
     if ((await exists(target)) && !force) {
-      throw new Error(`La skill "${selectedSkill}" ya existe en el proyecto. Usa --force para reinstalar.`);
+      throw new Error(t('ERR_SKILL_EXISTS', { name: selectedSkill }));
     }
     if (await exists(target)) await fs.rm(target, { recursive: true, force: true });
     await copyDir(sourcePath, target);
@@ -433,7 +472,7 @@ export async function installRemoteSkillRef(skillRef, options = {}) {
 export async function installFromManifest({ cwd = process.cwd(), remote = false, force = false } = {}) {
   const manifest = await readManifest(cwd);
   if (!manifest.skills.length) {
-    throw new Error('No hay skills en skillbase.json. Usa "skillbase add <skill>" o "skillbase install <skill> --remote".');
+    throw new Error(t('ERR_MANIFEST_EMPTY'));
   }
   for (const skill of manifest.skills) {
     if (remote || skill.source === 'remote') await installRemoteSkill(skill.name, { cwd, force });
@@ -442,12 +481,13 @@ export async function installFromManifest({ cwd = process.cwd(), remote = false,
 }
 
 export async function removeSkill(skillName, { cwd = process.cwd(), global = false } = {}) {
+  const safeName = sanitizeSkillName(skillName);
   if (global) {
-    await fs.rm(path.join(getGlobalSkillsDir(), skillName), { recursive: true, force: true });
+    await fs.rm(path.join(getGlobalSkillsDir(), safeName), { recursive: true, force: true });
     return;
   }
 
-  await fs.rm(path.join(getProjectSkillsDir(cwd), skillName), { recursive: true, force: true });
+  await fs.rm(path.join(getProjectSkillsDir(cwd), safeName), { recursive: true, force: true });
   const manifest = await readManifest(cwd);
   removeSkillFromManifest(manifest, skillName);
   await writeManifest(manifest, cwd);
@@ -542,8 +582,8 @@ export async function initProject({ cwd = process.cwd(), hard = false } = {}) {
 
   const selection = await selectSkillsFromList(suggested, {
     title: hard
-      ? 'Init --hard: selecciona skills recomendadas por nombre y tags'
-      : 'Init: selecciona skills recomendadas por nombre'
+      ? t('INIT_HARD_TITLE')
+      : t('INIT_TITLE')
   });
   if (selection.cancelled) return { technologies, suggested, installed: [], cancelled: true };
 

@@ -1,18 +1,15 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-
-async function exists(target) {
-  try {
-    await fs.access(target);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { exists } from './config.js';
 
 async function readJsonIfExists(file) {
   if (!(await exists(file))) return null;
-  return JSON.parse(await fs.readFile(file, 'utf8'));
+  try {
+    return JSON.parse(await fs.readFile(file, 'utf8'));
+  } catch (e) {
+    console.error(`Warning: Failed to parse JSON at ${file}. Skipping.`);
+    return null;
+  }
 }
 
 async function readTextIfExists(file) {

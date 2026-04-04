@@ -1,16 +1,24 @@
 {
   "name": "@ariasbruno/skillbase",
-  "version": "0.2.0",
-  "description": "CLI para administrar skills locales y remotas entre proyectos",
+  "version": "1.1.0",
+  "description": "CLI to manage local and remote AI skills avoiding context bloat",
   "type": "module",
   "bin": {
     "skillbase": "bin/skillbase.js"
   },
   "scripts": {
     "start": "node bin/skillbase.js -h",
-    "lint": "node --check bin/skillbase.js && node --check src/cli.js && node --check src/core.js"
+    "lint": "node --check bin/skillbase.js && node --check src/cli.js && node --check src/core.js && node --check src/i18n.js && node --check src/config.js"
   },
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ariasbruno/skillbase.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ariasbruno/skillbase/issues"
+  },
+  "homepage": "https://github.com/ariasbruno/skillbase#readme",
   "engines": {
     "node": ">=18.0.0"
   },
@@ -18,6 +26,7 @@
     "bin/",
     "src/",
     "README.md",
+    "README_es.md",
     "AGENTS.md",
     "LICENSE"
   ],

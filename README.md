@@ -1,126 +1,132 @@
 # 🧠 skillbase
 
-**Gestor de skills locales para entornos de desarrollo con IA.**
+**Local skill manager for AI-assisted development environments.**
 
-`skillbase` es un CLI de Node.js que te permite administrar las skills de tus agentes de Inteligencia Artificial utilizando enlaces simbólicos (symlinks) o instalaciones locales por cada workspace, evitando la saturación del contexto.
+`skillbase` is a Node.js CLI that empowers you to manage skills for your AI agents using symbolic links (symlinks) or local installations per workspace, preventing context saturation.
+
+---
+
+### 🌐 Language / Idioma
+
+- [🇪🇸 **Ver documentación en Español**](README_es.md)
+
+---
 
 ![demo](artifacts/skillbase-demo.gif)
 
----
+## 🤔 The Problem: Context Bloat
 
-## 🤔 El Problema: Saturación de Contexto (Context Bloat)
+When developing with AI assistance (using tools like Cursor, Copilot, or custom agents), having a global directory with hundreds of skills in `.agents/skills/` destroys model precision:
 
-Cuando desarrollas asistido por IA (usando herramientas como Cursor, Copilot o agentes personalizados), tener un directorio global con cientos de skills `.agents/skills/` destruye la precisión del modelo:
+*   **Hallucinations:** The LLM gets confused by having too many irrelevant tools at its disposal.
+*   **Token Consumption:** Sending the manifest of hundreds of skills in every prompt is slow and expensive.
+*   **Lack of Focus:** One project doesn't need the same skills as another.
 
-*   **Alucinaciones:** El LLM se confunde al tener demasiadas herramientas irrelevantes a su disposición.
-*   **Consumo de Tokens:** Enviar el manifiesto de cientos de skills en cada prompt es lento y costoso.
-*   **Falta de foco:** Un proyecto no necesita las mismas skills que otro.
+## 💡 The Solution
 
-## 💡 La Solución
+`skillbase` maintains a **single global registry** on your machine (`~/.skillbase/skills`) and allows you to install **only what you need** in your current project.
 
-`skillbase` mantiene un **único registro global** en tu máquina (`~/.skillbase/skills`) y permite hacer una instalación en tu proyecto actual de **solo lo que necesitas**.
-
-Imagínate que estás trabajando en el frontend de un e-commerce. No necesitas que la IA vea herramientas de DevOps o Backend; solo necesitas tus skills de React y quizás algunas de SEO. Con `skillbase`, le das a tu agente exactamente ese contexto.
+Imagine you're working on the frontend of an e-commerce site. No need for the AI to see DevOps or Backend tools; you only need your React skills and maybe some SEO skills. With `skillbase`, you give your agent exactly that context.
 
 ---
 
-## 🚀 Instalación
+## 🚀 Installation
 
-Instala el paquete globalmente:
+Install the package globally:
 
 ```bash
 npm install -g @ariasbruno/skillbase
-# O clona y linkea localmente:
+# Or clone and link locally:
 # npm link
 ```
 
-## 💻 Uso Rápido (Quickstart)
+## 💻 Quickstart
 
-**1. Inicializa tu proyecto**
-Detecta tecnologías y sugiere skills compatibles:
+**1. Initialize your project**
+Detect technologies and suggest compatible skills:
 ```bash
 skillbase init
 ```
 
-**2. Añade las skills necesarias**
+**2. Add necessary skills**
 ```bash
 skillbase add seo-analyzer
-# O abre el selector interactivo:
+# Or open the interactive selector:
 skillbase add
 ```
 
-**3. Instala desde el manifiesto**
-Si ya tienes un `skillbase.json`, recrea el entorno:
+**3. Install from manifest**
+If you already have a `skillbase.json`, recreate the environment:
 ```bash
 skillbase install
 ```
 
 ---
 
-## 🛠️ Referencia de Comandos
+## 🛠️ Command Reference
 
-| Comando | Alias | Descripción |
+| Command | Alias | Description |
 | :--- | :--- | :--- |
-| `skillbase ls [--project]` | `l [-p]` | Lista skills globales o del proyecto con `-p`. |
-| `skillbase init [--hard]` | | Detecta tecnologías y sugiere skills (usa `--hard` para analizar `tags` en `skill.json`). |
-| `skillbase add [<skill>] [-s]` | `a` | Instalar skill global. Sin nombre, abre el **selector interactivo**. `-s` crea symlink. |
-| `skillbase install` | `i` | Instala desde el manifiesto `skillbase.json`. Soporta `-r` (remotas) y `-f` (forzar). |
-| `skillbase install <ref> -r` | `i -r` | Instala skill remota (URL o GitHub). Requiere `-k <name>` si es un repo Git. |
-| `skillbase remove <skill> [--g]` | `rm` | Elimina skill del proyecto. Con `--g` la elimina del registro global. |
-| `skillbase check [-r]` | `c` | Busca actualizaciones. Con `-r` busca solo en fuentes remotas. |
-| `skillbase update [<skill>] [-r] [-f]` | `up` | Actualiza una o todas las skills. `-r` para remotas, `-f` para forzar. |
-| `skillbase migrate [-p] [-f]` | `m` | Migra desde el antiguo `.agents`. `-p` usa el dir del proyecto, `-f` sobrescribe. |
+| `skillbase ls [-g]` | `l [-g]` | List skills in local project. Use `-g` for global registry. |
+| `skillbase init [--hard]` | | Detect technologies and suggests skills (use `--hard` for deep analysis). |
+| `skillbase add [<skill>] [-s]` | `a` | Install global skill. Without name, opens **interactive selector**. `-s` for symlinks. |
+| `skillbase install` | `i` | Install from `skillbase.json`. Supports `-r` (remote) and `-f` (force). |
+| `skillbase install <ref> -r` | `i -r` | Install remote skill (URL or GitHub). Requires `-k <name>` if it's a Git repo. |
+| `skillbase remove <skill> [-g]` | `rm` | Remove skill from project. Use `-g` to remove from global registry instead. |
+| `skillbase check [-r]` | `c` | Check for updates. With `-r`, searches only in remote sources. |
+| `skillbase update [<skill>] [-r] [-f]` | `up` | Update one or all skills. `-r` for remote, `-f` to force. |
+| `skillbase migrate [-p] [-f]` | `m` | Migrate (~/.agents) or **promote** local skills to global registry with `-p`. |
+| `skillbase lang <en|es>` | | Change CLI language. |
 
-### 🚩 Flags Detalladas
-- `-h`, `--help`: Muestra la ayuda detallada.
-- `-s`, `--sym`: Crea un enlace simbólico en lugar de copiar los archivos (útil para desarrollo).
-- `-r`, `--remote`: Indica que la operación debe consultar fuentes externas (GitHub o API de skills.sh).
-- `-f`, `--force`: Ignora errores de "ya existe" y sobrescribe archivos/configuraciones.
-- `-k`, `--skill`: Nombre de la skill específica a extraer cuando se instala desde un repositorio GitHub.
-- `-p`, `--project`: En `ls`, lista skills locales. En `migrate`, indica que el origen es `.agents/skills`.
-- `--g`: Flag específica de `remove` para borrar una skill del registro global.
+### 🚩 Detailed Flags
+- `-h`, `--help`: Show detailed help.
+- `-s`, `--sym`: Create a symbolic link instead of copying files (useful for development).
+- `-r`, `--remote`: Indicates that the operation should consult external sources (GitHub or skills.sh API).
+- `-f`, `--force`: Ignore "already exists" errors and overwrite files/configurations.
+- `-k`, `--skill`: Name of the specific skill to extract when installing from a GitHub repository.
+- `-g`, `--global`: Operate on the global registry (for `ls` and `remove`).
 
-### ⌨️ Aliases de comandos
-Para mayor velocidad, puedes usar las iniciales:
+### ⌨️ Command Aliases
+For speed, you can use initials:
 `l` (ls), `a` (add), `i` (install), `rm` (remove), `c` (check), `up` (update), `m` (migrate).
 
 ---
 
-## 📂 ¿Cómo funciona bajo el capó?
+## 📂 How does it work under the hood?
 
-`skillbase` organiza tus herramientas de forma eficiente:
+`skillbase` organizes your tools efficiently:
 
 ```text
-Tu Computadora
-├── ~/.skillbase/skills/           <-- (Tu registro global físico)
-│   ├── seo-analyzer/              <-- (Código fuente real)
+Your Computer
+├── ~/.skillbase/skills/           <-- (Your physical global registry)
+│   ├── seo-analyzer/              <-- (Real source code)
 │   └── react-helper/
 │
-└── /Proyectos/mi-gran-app/        <-- (Tu workspace actual)
-    ├── skillbase.json             <-- (El manifiesto del proyecto)
-    └── .agents/skills/            <-- (Contexto limpio para la IA)
-        └── seo-analyzer/          <-- (Enlace o copia local)
+└── /Projects/my-great-app/        <-- (Your current workspace)
+    ├── skillbase.json             <-- (Project manifest)
+    └── .agents/skills/            <-- (Clean context for the AI)
+        └── seo-analyzer/          <-- (Link or local copy)
 ```
 
-Puedes cambiar la ubicación del registro global configurando la variable de entorno `SKILLBASE_HOME`.
+You can change the global registry location by setting the `SKILLBASE_HOME` environment variable.
 
 ---
 
-## 🌐 Fuentes Remotas
+## 🌐 Remote Sources
 
-Instala skills directamente desde repositorios de GitHub:
+Install skills directly from GitHub repositories:
 ```bash
 skillbase install <repo-url> --remote
-# Ejemplo:
-skillbase install https://github.com/usuario/my-skills --remote --skill analyzer
+# Example:
+skillbase install https://github.com/user/my-skills --remote --skill analyzer
 ```
 
 ---
 
-## 🤝 Contribuciones
+## 🤝 Contributions
 
-¡Las contribuciones son bienvenidas! Si tienes ideas para mejorar la gestión del contexto, abre un Issue o un Pull Request.
+Contributions are welcome! If you have ideas to improve context management, open an Issue or a Pull Request.
 
-## 📄 Licencia
+## 📄 License
 
 MIT

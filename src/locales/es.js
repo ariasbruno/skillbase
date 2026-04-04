@@ -1,0 +1,104 @@
+export const es = {
+  // General
+  USAGE: 'Uso:',
+  COMMANDS: 'Comandos:',
+  OPTIONS: 'Opciones comunes:',
+  SHORTCUTS: 'Atajos: l=ls, h=-h, a=add, i=install, rm=remove, c=check, up=update, m=migrate',
+  HELP_FOOTER: 'Usa {cmd} para ver todas las opciones y comandos.',
+  USE_HELP: 'Usa {cmd} para ver todas las opciones y comandos.',
+  CANCELLED: 'Operación cancelada.',
+  COMMANDS_AVAILABLE: 'Comandos disponibles:',
+  SELECTION_CANCELLED: 'Selección cancelada.',
+  UNKNOWN_COMMAND: 'Comando desconocido: {cmd}. Usa skillbase -h',
+
+  // Commands info
+  DESC_INIT: 'Inicializa el proyecto y detecta el stack [--hard]',
+  DESC_INIT_SHORT: 'Configura proyecto y detecta stack',
+  DESC_ADD: 'Añade una o varias skills al proyecto',
+  DESC_ADD_SHORT: 'Añadir nueva skill (global/proyecto)',
+  DESC_LS: 'Lista las skills instaladas (local o global con -g)',
+  DESC_LS_SHORT: 'Listar skills instaladas',
+  DESC_INSTALL: 'Instala desde el manifiesto o remoto [-r] [-k <nombre>]',
+  DESC_INSTALL_SHORT: 'Instalar dependencias del manifiesto',
+  DESC_REMOVE: 'Elimina una skill del proyecto o global [-g]',
+  DESC_CHECK: 'Busca actualizaciones de las skills instaladas',
+  DESC_UPDATE: 'Actualiza una o todas las skills',
+  DESC_MIGRATE: 'Migra (~/.agents) o promueve (-p) skills locales a global',
+  DESC_MIGRATE_SHORT: 'Migrar o promover skills locales',
+  DESC_LANG: 'Cambia el idioma de la herramienta (en|es)',
+  DESC_LANG_SHORT: 'Cambiar idioma de la CLI',
+
+  // Options info
+  OPT_REMOTE: 'Operar con repositorios remotos (GitHub/GitLab)',
+  OPT_FORCE: 'Forzar la operación (sobrescribir archivos)',
+  OPT_SYM: 'Crear enlaces simbólicos en vez de copiar (solo add)',
+  OPT_GLOBAL: 'Operar de forma global (para ls y remove)',
+  OPT_HELP: 'Mostrar esta ayuda',
+
+  // Command-specific messages
+  LS_GLOBAL_EMPTY: 'No hay skills globales instaladas en {dir}',
+  LS_GLOBAL_TITLE: 'Skills globales ({dir}):',
+  LS_PROJECT_EMPTY: 'No hay skills instaladas localmente en {dir}',
+  LS_PROJECT_TITLE: 'Skills del proyecto ({dir}):',
+
+  INIT_NO_STACK: 'No se detectó stack en el proyecto.',
+  INIT_ANALYSIS: 'Análisis de stack:',
+  INIT_RESUMEN: 'Resumen:',
+  INIT_INSTALLED: 'Instaladas: {list}',
+  INIT_NONE: 'No se instaló ninguna skill.',
+
+  ADD_NO_SELECTED: 'No se seleccionaron skills para instalar.',
+  ADD_RESUMEN: 'Resumen:',
+  ADD_SUCCESS: 'Skill "{skill}" instalada.',
+  ADD_REMOTE_SUCCESS: 'Skill remota "{skill}" instalada.',
+
+  REMOVE_GLOBAL_SUCCESS: 'Skill global "{skill}" eliminada.',
+  REMOVE_PROJECT_SUCCESS: 'Skill del proyecto "{skill}" eliminada.',
+  REMOVE_NOT_FOUND: 'La skill "{skill}" no está instalada.',
+
+  CHECK_SEARCHING: 'Buscando actualizaciones...',
+  CHECK_UP_TO_DATE: 'Todas las skills están al día.',
+  CHECK_UPDATES_FOUND: 'Hay actualizaciones disponibles:',
+  CHECK_UPDATE_HINT: 'Usa {cmd} para actualizar.',
+
+  UPDATE_START: 'Actualizando skills...',
+  UPDATE_SUCCESS: 'Todas las skills actualizadas.',
+  UPDATE_SINGLE_SUCCESS: 'Skill "{skill}" actualizada.',
+
+  MIGRATE_TITLE: 'Migración de skills',
+  MIGRATE_SOURCE: 'Origen: {dir}',
+  MIGRATE_FOUND: 'Skills encontradas: {count}',
+  MIGRATE_SUCCESS_LIST: 'Skills migradas a {dir}:',
+  MIGRATE_SKIPPED_LIST: 'Omitidas (ya existen):',
+  MIGRATE_RESUMEN_TITLE: 'Resumen:',
+  MIGRATE_RESUMEN_SUCCESS: '{count} skills migradas con éxito.',
+  MIGRATE_RESUMEN_DEST: 'Destino: {dir}',
+  MIGRATE_NONE: 'No se migraron nuevas skills.',
+
+  LANG_SUCCESS: 'Idioma cambiado a {lang} con éxito.',
+  LANG_INVALID: 'Idioma no soportado: {lang}. Usa "en" o "es".',
+
+  // Interfaz Interactiva
+  UI_SELECT_ONE: 'Seleccionar una skill',
+  UI_SELECT_MULTIPLE: 'Seleccionar skills',
+  UI_CONTROLS: '↑↓ navegar • [espacio] sel. {status} • [a] todo • [enter] instalar • [esc] salir',
+  UI_SELECTED: 'seleccionadas',
+  UI_PAGE: 'pág. {current}/{total}',
+  UI_AVAILABLE: '{count} skills disponibles',
+  UI_REQUIRED_TTY: 'La selección interactiva requiere una terminal TTY. Usa: skillbase add <skill>.',
+
+  // Core / Errores
+  ERR_GLOBAL_NOT_FOUND: 'La skill global "{name}" no existe en {dir}',
+  ERR_REMOTE_INVALID: 'Debes indicar una skill remota válida.',
+  ERR_REMOTE_METADATA: 'No se pudo obtener metadata remota para "{ref}". Usa slug tipo "owner/skill" o URL de skills.sh.',
+  ERR_REMOTE_NO_URL: 'La metadata remota de "{ref}" no contiene downloadUrl/sourceUrl/repo/url',
+  ERR_REMOTE_DOWNLOAD: 'No se pudo descargar archiveUrl ({status})',
+  ERR_GITHUB_USAGE: 'Para instalar desde GitHub usa: skillbase install <repo-url> --remote --skill <nombre-skill>.',
+  ERR_SKILL_EXISTS: 'La skill "{name}" ya existe en el proyecto. Usa --force para reinstalar.',
+  ERR_SKILL_REQUIRED: 'Falta --skill <nombre>. Ejemplo: skillbase install <repo-url> --remote --skill find-skills',
+  ERR_SKILL_NOT_FOUND_REMOTE: 'No se encontró la skill "{name}" en el repo remoto.',
+  ERR_MANIFEST_EMPTY: 'No hay skills en skillbase.json. Usa "skillbase add <skill>" o "skillbase install <skill> --remote".',
+
+  INIT_HARD_TITLE: 'Init --hard: selecciona skills recomendadas por nombre y tags',
+  INIT_TITLE: 'Init: selecciona skills recomendadas por nombre',
+};
