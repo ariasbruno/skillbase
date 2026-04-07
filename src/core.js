@@ -56,11 +56,13 @@ export async function ensureDir(dir) {
 
 function sanitizeSkillName(name) {
   if (typeof name !== 'string') return '';
-  
+
   return name
-    .replace(/[\\/]/g, '_')   
-    .replace(/\.\./g, '')     
-    .replace(/^[.~/]+/, '');  
+    .replace(/\0/g, '')        // Null bytes
+    .replace(/[\\/]/g, '_')    // Path separators → underscore
+    .replace(/\.\./g, '')      // Traversal sequences
+    .replace(/^[.~/]+/, '')    // Leading dots/tildes/slashes
+    .trim();
 }
 
 export async function listGlobalSkills() {
@@ -104,6 +106,7 @@ export function compareVersion(a, b) {
 
 export async function addSkill(skillName, { sym = false, cwd = process.cwd() } = {}) {
   const safeName = sanitizeSkillName(skillName);
+  if (!safeName) throw new Error(t('ERR_INVALID_SKILL_NAME', { name: skillName }));
   const globalPath = path.join(getGlobalSkillsDir(), safeName);
   if (!(await exists(globalPath))) {
     throw new Error(t('ERR_GLOBAL_NOT_FOUND', { name: skillName, dir: getGlobalSkillsDir() }));
@@ -166,7 +169,6 @@ export async function addSkillsInteractive({ cwd = process.cwd(), sym = false, o
     await addSkill(skill, { cwd, sym });
   }
 
-  output.write(`\n${t('INIT_INSTALLED', { list: selectedSkills.join(', ') || t('INIT_NONE') })}\n`);
   return { selected: selectedSkills, cancelled: false };
 }
 
@@ -263,7 +265,14 @@ async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage
     firstRender = false;
   };
 
-  render();
+  try {
+    render();
+  } catch (err) {
+    output.write(H_SHOW_CURSOR);
+    if (typeof input.setRawMode === 'function') input.setRawMode(false);
+    input.pause();
+    throw err;
+  }
   const cleanup = () => {
     if (clearOnExit) {
       output.write('\r' + H_MOVE_UP(renderedLines) + H_CLEAR_DOWN);
@@ -338,7 +347,7 @@ async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage
 }
 
 async function tryFetchJson(url) {
-  const response = await fetch(url);
+  const response = await fetch(url, { signal: AbortSignal.timeout(15000) });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   return response.json();
 }
@@ -410,12 +419,12 @@ async function downloadSkillFromRemote(skillRef, tmpDir) {
   }
 
   if (metadata.archiveUrl) {
-    const archiveResponse = await fetch(metadata.archiveUrl);
+    const archiveResponse = await fetch(metadata.archiveUrl, { signal: AbortSignal.timeout(30000) });
     if (!archiveResponse.ok) throw new Error(t('ERR_REMOTE_DOWNLOAD', { status: archiveResponse.status }));
     const archivePath = path.join(tmpDir, `${localName}.tgz`);
     const buffer = Buffer.from(await archiveResponse.arrayBuffer());
     await fs.writeFile(archivePath, buffer);
-    throw new Error('archiveUrl descargado, pero falta extractor .tgz (pendiente de implementación)');
+    throw new Error(t('ERR_ARCHIVE_NOT_SUPPORTED', { ref: skillRef }));
   }
 
   const skillPath = path.join(tmpDir, localName);
@@ -464,6 +473,9 @@ export async function installRemoteSkill(skillName, { cwd = process.cwd(), force
 }
 
 async function installRemoteFromGitHub(repoUrl, selectedSkill, { cwd = process.cwd(), force = false } = {}) {
+  if (!/^https?:\/\//i.test(repoUrl)) {
+    throw new Error(t('ERR_INVALID_REPO_URL'));
+  }
   if (!selectedSkill) {
     throw new Error(t('ERR_SKILL_REQUIRED'));
   }
@@ -530,6 +542,7 @@ export async function installFromManifest({ cwd = process.cwd(), remote = false,
 
 export async function removeSkill(skillName, { cwd = process.cwd(), global = false } = {}) {
   const safeName = sanitizeSkillName(skillName);
+  if (!safeName) throw new Error(t('ERR_INVALID_SKILL_NAME', { name: skillName }));
   if (global) {
     await fs.rm(path.join(getGlobalSkillsDir(), safeName), { recursive: true, force: true });
     return;

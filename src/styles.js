@@ -41,7 +41,7 @@ export const H_MOVE_TO_COL = (n) => `\x1b[${n}G`;
 
 // Símbolos comunes
 export const S_DIAMOND = '◆';
-export const S_BULLET = '◆';
+
 export const S_POINTER = '❯';
 export const S_STEP = '◇';
 export const S_CHECK = '✔';

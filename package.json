@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node bin/skillbase.js -h",
-    "lint": "node --check bin/skillbase.js && node --check src/cli.js && node --check src/core.js && node --check src/i18n.js && node --check src/config.js"
+    "test": "node --test",
+    "lint": "for f in bin/skillbase.js src/*.js src/commands/*.js src/locales/*.js; do node --check \"$f\" || exit 1; done"
   },
   "license": "MIT",
   "repository": {
@@ -26,8 +27,6 @@
     "bin/",
     "src/",
     "README.md",
-    "README_es.md",
-    "AGENTS.md",
     "LICENSE"
   ],
   "keywords": [
@@ -38,5 +37,8 @@
     "context",
     "bloat",
     "developer-tools"
-  ]
+  ],
+  "devDependencies": {
+    "node-pty": "1.1.0"
+  }
 }

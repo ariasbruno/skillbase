@@ -4,7 +4,6 @@ export const es = {
   COMMANDS: 'Comandos:',
   OPTIONS: 'Opciones comunes:',
   SHORTCUTS: 'Atajos: l=ls, h=-h, a=add, i=install, rm=remove, c=check, up=update, m=migrate, cfg=config',
-  HELP_FOOTER: 'Usa {cmd} para ver todas las opciones y comandos.',
   USE_HELP: 'Usa {cmd} para ver todas las opciones y comandos.',
   CANCELLED: 'Operación cancelada.',
   COMMANDS_AVAILABLE: 'Comandos disponibles:',
@@ -54,6 +53,9 @@ export const es = {
   ADD_RESUMEN: 'Resumen:',
   ADD_SUCCESS: 'Skill "{skill}" instalada.',
   ADD_REMOTE_SUCCESS: 'Skill remota "{skill}" instalada.',
+
+  INSTALL_ERROR_SINGLE: 'Para instalar una skill remota individual usa: skillbase install <url> --remote',
+  INSTALL_MANIFEST_SUCCESS: '{count} skills instaladas desde el manifiesto.',
 
   REMOVE_GLOBAL_SUCCESS: 'Skill global "{skill}" eliminada.',
   REMOVE_PROJECT_SUCCESS: 'Skill del proyecto "{skill}" eliminada.',
@@ -125,6 +127,9 @@ export const es = {
   ERR_SKILL_REQUIRED: 'Falta --skill <nombre>. Ejemplo: skillbase install <repo-url> --remote --skill find-skills',
   ERR_SKILL_NOT_FOUND_REMOTE: 'No se encontró la skill "{name}" en el repo remoto.',
   ERR_MANIFEST_EMPTY: 'No hay skills en skillbase.json. Usa "skillbase add <skill>" o "skillbase install <skill> --remote".',
+  ERR_INVALID_SKILL_NAME: 'Nombre de skill inválido: "{name}"',
+  ERR_ARCHIVE_NOT_SUPPORTED: 'Las descargas de archivos (.tgz) aún no están soportadas para "{ref}".',
+  ERR_INVALID_REPO_URL: 'URL de repositorio inválida. Solo se soportan URLs HTTP/HTTPS.',
 
   INIT_HARD_TITLE: 'Init --hard: selecciona skills recomendadas por nombre y tags',
   INIT_TITLE: 'Init: selecciona skills recomendadas por nombre',
