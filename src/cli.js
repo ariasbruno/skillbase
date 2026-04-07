@@ -79,7 +79,7 @@ function printHelp() {
     ['init', ``, t('DESC_INIT')],
     ['add', `<skill>`, t('DESC_ADD')],
     ['install', `[url]`, t('DESC_INSTALL')],
-    ['remove', `<skill>`, t('DESC_REMOVE')],
+    ['remove', `[skill]`, t('DESC_REMOVE')],
     ['check', ``, t('DESC_CHECK')],
     ['update', `[skill]`, t('DESC_UPDATE')],
     ['migrate', ``, t('DESC_MIGRATE')],
@@ -280,14 +280,73 @@ export async function runCLI(argv) {
     }
 
     case 'remove': {
-      if (!maybeSkill) throw new Error(t('REMOVE_REQUIRED'));
       const isGlobal = hasFlag(args, '-g', '--global');
-      await removeSkill(maybeSkill, { global: isGlobal });
+      const removeAll = hasFlag(args, '-a', '--all');
+
+      let skillsToRemove = (maybeSkill && !maybeSkill.startsWith('-')) ? [maybeSkill] : null;
+
+      if (removeAll) {
+        printLogo();
+        const skills = isGlobal ? await listGlobalSkills() : await listProjectSkills();
+
+        if (!skills.length) {
+          console.log(`${yellow(S_WARNING)} ${t('REMOVE_NO_SKILLS')}`);
+          return;
+        }
+
+        const scope = isGlobal ? t('REMOVE_SCOPE_GLOBAL') : t('REMOVE_SCOPE_PROJECT');
+        console.log(`${cyan(S_BAR_START)}  ${red(bold(t('REMOVE_ALL_CONFIRM_TITLE', { count: bold(skills.length), scope })))}`);
+        skills.forEach(s => console.log(`${cyan(S_BAR)}  ${dim2(S_POINTER)} ${text(s)}`));
+        console.log(`${cyan(S_BAR)}`);
+
+        const { selected: answer, cancelled } = await selectSkillsInteractive({
+          skills: [t('REMOVE_ALL_NO'), t('REMOVE_ALL_YES')],
+          title: t('REMOVE_ALL_CONFIRM_PROMPT'),
+          radio: true,
+          clearOnExit: true
+        });
+
+        if (cancelled || !answer.length || answer[0] === t('REMOVE_ALL_NO')) {
+          console.log(`${cyan(S_BAR_START)}  ${dim2(t('CANCELLED'))}`);
+          console.log(`${cyan(S_BAR_END)}`);
+          return;
+        }
+
+        skillsToRemove = skills;
+      }
+
+      if (!skillsToRemove) {
+        printLogo();
+        const skills = isGlobal ? await listGlobalSkills() : await listProjectSkills();
+
+        if (!skills.length) {
+          console.log(`${yellow(S_WARNING)} ${t('REMOVE_NO_SKILLS')}`);
+          return;
+        }
+
+        const { selected, cancelled } = await selectSkillsInteractive({
+          skills,
+          title: t('REMOVE_SELECT_TITLE'),
+          clearOnExit: true
+        });
+
+        if (cancelled || !selected.length) {
+          console.log(`${cyan(S_BAR_START)}  ${dim2(t('REMOVE_NO_SELECTED'))}`);
+          console.log(`${cyan(S_BAR_END)}`);
+          return;
+        }
+
+        skillsToRemove = selected;
+      }
+
       console.log(`${cyan(S_BAR_START)}  ${bold(t('INIT_RESUMEN'))}`);
-      if (isGlobal) {
-        console.log(`${cyan(S_BAR)}  ${green(S_CHECK)} ${t('REMOVE_GLOBAL_SUCCESS', { skill: bold(maybeSkill) })}`);
-      } else {
-        console.log(`${cyan(S_BAR)}  ${green(S_CHECK)} ${t('REMOVE_PROJECT_SUCCESS', { skill: bold(maybeSkill) })}`);
+      for (const skill of skillsToRemove) {
+        await removeSkill(skill, { global: isGlobal });
+        if (isGlobal) {
+          console.log(`${cyan(S_BAR)}  ${green(S_CHECK)} ${t('REMOVE_GLOBAL_SUCCESS', { skill: bold(skill) })}`);
+        } else {
+          console.log(`${cyan(S_BAR)}  ${green(S_CHECK)} ${t('REMOVE_PROJECT_SUCCESS', { skill: bold(skill) })}`);
+        }
       }
       console.log(`${cyan(S_BAR_END)}\n`);
       return;
