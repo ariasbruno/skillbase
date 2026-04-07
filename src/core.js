@@ -11,6 +11,8 @@ import {
   getProjectSkillsDir, 
   PROJECT_AGENTS_DIR, 
   PROJECT_SKILLS_DIR,
+  GLOBAL_MIGRATE_PATHS,
+  PROJECT_MIGRATE_PATHS,
   exists 
 } from './config.js';
 import { readManifest, removeSkillFromManifest, upsertSkill, writeJson, writeManifest } from './manifest.js';
@@ -29,6 +31,8 @@ import {
   S_STEP,
   S_SQUARE,
   S_SQUARE_FILL,
+  S_RADIO,
+  S_RADIO_FILL,
   S_BAR,
   S_BAR_START,
   S_BAR_END,
@@ -43,7 +47,7 @@ function nowISO() {
   return new Date().toISOString();
 }
 
-export { getGlobalSkillsDir, getProjectRoot, getProjectSkillsDir, readManifest };
+export { getGlobalSkillsDir, getProjectRoot, getProjectSkillsDir, readManifest, GLOBAL_MIGRATE_PATHS, PROJECT_MIGRATE_PATHS };
 
 export async function ensureDir(dir) {
   await fs.mkdir(dir, { recursive: true });
@@ -83,10 +87,11 @@ async function readSkillVersion(skillPath) {
   return typeof data.version === 'string' ? data.version : null;
 }
 
-function compareVersion(a, b) {
+export function compareVersion(a, b) {
   if (!a || !b) return 0;
-  const aa = a.split('.').map((x) => Number.parseInt(x, 10) || 0);
-  const bb = b.split('.').map((x) => Number.parseInt(x, 10) || 0);
+  const parse = (v) => v.replace(/^v/, '').split('.').map((x) => Number.parseInt(x, 10) || 0);
+  const aa = parse(a);
+  const bb = parse(b);
   for (let i = 0; i < Math.max(aa.length, bb.length); i += 1) {
     const av = aa[i] ?? 0;
     const bv = bb[i] ?? 0;
@@ -126,28 +131,55 @@ export async function addSkill(skillName, { sym = false, cwd = process.cwd() } =
   await writeManifest(manifest, cwd);
 }
 
-export async function addSkillsInteractive({ cwd = process.cwd(), sym = false } = {}) {
-  const skills = await listGlobalSkills();
-  if (!skills.length) return { selected: [], cancelled: false };
-  const selection = await selectSkillsFromList(skills, {
-    title: t('UI_SELECT_MULTIPLE'),
-    requireTTYMessage: t('UI_REQUIRED_TTY')
+export async function selectSkillsInteractive({ skills = null, title = null, subtitle = null, radio = false, clearOnExit = false } = {}) {
+  const skillsList = skills || await listGlobalSkills();
+  if (!skillsList.length) return { selected: [], cancelled: false };
+
+  const selection = await selectSkillsFromList(skillsList, {
+    title: title || t('UI_SELECT_MULTIPLE'),
+    requireTTYMessage: t('UI_REQUIRED_TTY'),
+    radio,
+    clearOnExit
   });
+
+  if (selection.cancelled) return selection;
+
+  // Si pasamos objetos {name, detail}, devolvemos solo el nombre para compatibilidad
+  const selectedNames = selection.selected.map(item => 
+    typeof item === 'object' ? item.name : item
+  );
+
+  return { selected: selectedNames, cancelled: false };
+}
+
+export async function addSkillsInteractive({ cwd = process.cwd(), sym = false, overrideSkills = null, title = null } = {}) {
+  const selection = await selectSkillsInteractive({ 
+    skills: overrideSkills, 
+    title: title || t('UI_SELECT_MULTIPLE') 
+  });
+  
   if (selection.cancelled) return { selected: [], cancelled: true };
   const selectedSkills = selection.selected;
+
   for (const skill of selectedSkills) {
     await addSkill(skill, { cwd, sym });
   }
+
   output.write(`\n${t('INIT_INSTALLED', { list: selectedSkills.join(', ') || t('INIT_NONE') })}\n`);
   return { selected: selectedSkills, cancelled: false };
 }
 
-async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage } = {}) {
+async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage, radio = false, clearOnExit = false } = {}) {
   if (!input.isTTY || !output.isTTY) {
     throw new Error(requireTTYMessage || t('UI_REQUIRED_TTY'));
   }
 
   const selected = new Set();
+  // En modo radio, pre-seleccionamos el primero para que no haya nada pulsado
+  if (radio && skills.length > 0) {
+    selected.add(skills[0]);
+  }
+
   let cursor = 0;
   let offset = 0;
   let renderedLines = 0;
@@ -183,27 +215,31 @@ async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage
       const isSelected = selected.has(skill);
       const isCursor = realIndex === cursor;
 
+      const skillName = typeof skill === 'object' ? skill.name : skill;
+      const skillDetail = typeof skill === 'object' ? skill.detail : null;
+
       const check = isSelected
-        ? cyan(S_SQUARE_FILL)
-        : dim2(S_SQUARE);
+        ? cyan(radio ? S_RADIO_FILL : S_SQUARE_FILL)
+        : dim2(radio ? S_RADIO : S_SQUARE);
 
       const pointer = isCursor
         ? cyan(S_POINTER)
         : ' ';
 
       // Formatear nombre: owner › name (si tiene /)
-      let label = skill;
-      if (skill.includes('/')) {
-        const [owner, ...nameParts] = skill.split('/');
+      let label = skillName;
+      if (skillName.includes('/')) {
+        const [owner, ...nameParts] = skillName.split('/');
         const name = nameParts.join('/');
         const ownerPart = isCursor ? bold(owner) : dim2(owner);
         const namePart = isSelected ? cyan(name) : (isCursor ? bold(name) : text(name));
         label = `${ownerPart} ${dim2(S_STEP)} ${namePart}`;
       } else {
-        label = isCursor ? bold(skill) : (isSelected ? cyan(skill) : text(skill));
+        label = isCursor ? bold(skillName) : (isSelected ? cyan(skillName) : text(skillName));
       }
 
-      lines.push(`${cyan(S_BAR)}  ${pointer} ${check} ${label}`);
+      const detail = skillDetail ? ` ${dim2(skillDetail)}` : '';
+      lines.push(`${cyan(S_BAR)}  ${pointer} ${check} ${label}${detail}`);
     });
 
     for (let i = visibleSkills.length; i < pageSize; i += 1) {
@@ -228,7 +264,12 @@ async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage
 
   render();
   const cleanup = () => {
-    output.write('\n' + H_SHOW_CURSOR);
+    if (clearOnExit) {
+      output.write('\r' + H_MOVE_UP(renderedLines) + H_CLEAR_DOWN);
+    } else {
+      output.write('\n');
+    }
+    output.write(H_SHOW_CURSOR);
     if (typeof input.setRawMode === 'function') input.setRawMode(false);
     input.pause();
     input.removeListener('keypress', onKeypress);
@@ -255,12 +296,17 @@ async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage
       }
       if (key.name === 'space') {
         const skill = skills[cursor];
-        if (selected.has(skill)) selected.delete(skill);
-        else selected.add(skill);
+        if (radio) {
+          selected.clear();
+          selected.add(skill);
+        } else {
+          if (selected.has(skill)) selected.delete(skill);
+          else selected.add(skill);
+        }
         render();
         return;
       }
-      if (key.name === 'a') {
+      if (key.name === 'a' && !radio) {
         if (selected.size === skills.length) {
           selected.clear();
         } else {
@@ -270,6 +316,7 @@ async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage
         return;
       }
       if (key.name === 'return' || key.name === 'enter') {
+        if (radio && selected.size === 0) return; // Forzar selección en radio
         cleanup();
         resolve({ cancelled: false });
         return;
@@ -594,34 +641,166 @@ export async function initProject({ cwd = process.cwd(), hard = false } = {}) {
   return { technologies, suggested, installed: selection.selected, cancelled: false };
 }
 
-export async function migrateAgentsSkillsToSkillbase({ cwd = process.cwd(), force = false, fromProject = false } = {}) {
+/**
+ * Extrae metadata de una skill (versión en YAML, updatedAt en lock, mtime).
+ */
+export async function extractSkillMetadata(skillPath) {
+  const metadata = {
+    version: null,
+    updatedAt: null,
+    mtime: null,
+    hasVersion: false,
+    hasLock: false
+  };
+
+  try {
+    const stats = await fs.stat(skillPath);
+    metadata.mtime = stats.mtime;
+  } catch {
+    return metadata;
+  }
+
+  // 1. Prioridad: YAML frontmatter en SKILL.md
+  const skillMdPath = path.join(skillPath, 'SKILL.md');
+  if (await exists(skillMdPath)) {
+    try {
+      const content = await fs.readFile(skillMdPath, 'utf8');
+      // Regex para buscar el bloque frontmatter y capturar la versión de forma robusta
+      const yamlMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
+      if (yamlMatch) {
+        const versionMatch = yamlMatch[1].match(/^version:\s*["']?([vV]?([0-9.]+))["']?$/m);
+        if (versionMatch) {
+          metadata.version = versionMatch[1];
+          metadata.hasVersion = true;
+        }
+      }
+    } catch {
+      // Ignorar errores de lectura
+    }
+  }
+
+  // 2. Prioridad: updatedAt en .skill-lock.json
+  const lockPath = path.join(skillPath, '.skill-lock.json');
+  if (await exists(lockPath)) {
+    try {
+      const lockData = JSON.parse(await fs.readFile(lockPath, 'utf8'));
+      if (lockData.updatedAt) {
+        metadata.updatedAt = lockData.updatedAt;
+        metadata.hasLock = true;
+      }
+      // Si no hay versión en YAML, intentar sacar del lock si existe un campo version ahí (opcional)
+      if (!metadata.version && lockData.version) {
+        metadata.version = lockData.version;
+      }
+    } catch {
+      // Ignorar errores de lectura
+    }
+  }
+
+  return metadata;
+}
+
+/**
+ * Escanea múltiples rutas en busca de skills.
+ */
+export async function scanMigrationSources({ fromProject = false, cwd = process.cwd() } = {}) {
+  const rawPaths = fromProject ? PROJECT_MIGRATE_PATHS : GLOBAL_MIGRATE_PATHS;
+  const home = os.homedir();
+  const root = getProjectRoot(cwd);
+
+  const sources = [];
+  for (const rawPath of rawPaths) {
+    const fullPath = rawPath.startsWith('~') 
+      ? path.join(home, rawPath.slice(1)) 
+      : path.resolve(root, rawPath);
+
+    if (!(await exists(fullPath))) continue;
+
+    try {
+      const stats = await fs.stat(fullPath);
+      if (!stats.isDirectory()) continue;
+
+      const entries = await fs.readdir(fullPath, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory()) continue;
+
+        const skillPath = path.join(fullPath, entry.name);
+        // Evitar carpetas ocultas comunes o utilitarias
+        if (entry.name.startsWith('.') && entry.name !== '.agents') {
+           // Si el nombre es exactamente .agents y está dentro de una ruta de proyecto, 
+           // suele ser la carpeta raíz de agentes, no una skill.
+           // Pero en PROJECT_MIGRATE_PATHS tenemos '.agents', así que debemos decidir.
+           // Si '.agents' tiene una subcarpeta 'skills', preferimos esa si está en la lista.
+           continue; 
+        }
+
+        const metadata = await extractSkillMetadata(skillPath);
+        sources.push({
+          name: entry.name,
+          sourcePath: skillPath,
+          originPath: fullPath,
+          ...metadata
+        });
+      }
+    } catch {
+      // Ignorar
+    }
+  }
+  return sources;
+}
+
+export async function migrateAgentsSkillsToSkillbase({ fromProject = false, cwd = process.cwd() } = {}) {
+  const sources = await scanMigrationSources({ fromProject, cwd });
+  const globalDir = getGlobalSkillsDir();
+  const rawEntries = (await exists(globalDir)) 
+    ? await fs.readdir(globalDir, { withFileTypes: true }).catch(() => []) 
+    : [];
+  const alreadyInstalled = rawEntries
+    .filter(e => typeof e === 'object' && e.isDirectory())
+    .map(e => e.name);
+  
+  // Agrupar por nombre
+  const grouped = new Map();
+  for (const s of sources) {
+    if (!grouped.has(s.name)) grouped.set(s.name, []);
+    grouped.get(s.name).push(s);
+  }
+
+  const conflicts = [];
+  const uniques = [];
+  const duplicates = [];
+
+  for (const [name, matches] of grouped.entries()) {
+    const existsGlobally = alreadyInstalled.includes(name);
+    
+    if (existsGlobally) {
+      conflicts.push({ name, matches });
+    } else if (matches.length === 1) {
+      uniques.push(matches[0]);
+    } else {
+      duplicates.push({ name, matches });
+    }
+  }
+
+  return { conflicts, uniques, duplicates, totalFound: sources.length };
+}
+
+export async function performMigration(skillsToMigrate) {
   const globalDir = getGlobalSkillsDir();
   await ensureDir(globalDir);
-
-  const agentsDir = fromProject ? path.join(getProjectRoot(cwd), PROJECT_AGENTS_DIR) : path.join(os.homedir(), '.agents');
-  const agentsSkillsDir = path.join(agentsDir, PROJECT_SKILLS_DIR);
-  const toMigrate = new Map();
-
-  if (await exists(agentsSkillsDir)) {
-    const entries = await fs.readdir(agentsSkillsDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (entry.isDirectory()) toMigrate.set(entry.name, path.join(agentsSkillsDir, entry.name));
-    }
-  }
-
   const migrated = [];
-  const skipped = [];
 
-  for (const [skillName, sourcePath] of toMigrate.entries()) {
-    const targetPath = path.join(globalDir, skillName);
-    if ((await exists(targetPath)) && !force) {
-      skipped.push(skillName);
-      continue;
+  for (const skill of skillsToMigrate) {
+    const safeName = sanitizeSkillName(skill.name);
+    if (!safeName) continue; // Nombre inválido, omitir
+    const targetPath = path.join(globalDir, safeName);
+    // Para migración masiva siempre sobreescribimos si el usuario ya lo decidió/seleccionó
+    if (await exists(targetPath)) {
+      await fs.rm(targetPath, { recursive: true, force: true });
     }
-    if (await exists(targetPath)) await fs.rm(targetPath, { recursive: true, force: true });
-    await copyDir(sourcePath, targetPath);
-    migrated.push(skillName);
+    await copyDir(skill.sourcePath, targetPath);
+    migrated.push(safeName);
   }
 
-  return { migrated, skipped, totalFound: toMigrate.size, sourceRoot: agentsDir };
+  return migrated;
 }

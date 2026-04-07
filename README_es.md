@@ -75,7 +75,7 @@ skillbase install
 | `skillbase remove <skill> [-g]` | `rm` | Elimina skill del proyecto. Usa `-g` para eliminarla del registro global. |
 | `skillbase check [-r]` | `c` | Busca actualizaciones. Con `-r` busca solo en fuentes remotas. |
 | `skillbase update [<skill>] [-r] [-f]` | `up` | Actualiza una o todas las skills. `-r` para remotas, `-f` para forzar. |
-| `skillbase migrate [-p] [-f]` | `m` | Migra (~/.agents) o **promueve** skills locales al registro global con `-p`. |
+| `skillbase migrate [-p] [-y]` | `m` | Migra (~/.agents) o **promueve** skills locales con `-p`. Usa `-y` para modo automático. |
 | `skillbase lang <en|es>` | | Cambia el idioma de la CLI. |
 
 ### 🚩 Flags Detalladas
@@ -85,6 +85,7 @@ skillbase install
 - `-f`, `--force`: Ignora errores de "ya existe" y sobrescribe archivos/configuraciones.
 - `-k`, `--skill`: Nombre de la skill específica a extraer cuando se instala desde un repositorio GitHub.
 - `-g`, `--global`: Para operar sobre el registro global (en `ls` y `remove`).
+- `-y`, `--all`: Realiza la migración automática sin preguntas (instala y sobrescribe todo).
 
 ### ⌨️ Aliases de comandos
 Para mayor velocidad, puedes usar las iniciales:
