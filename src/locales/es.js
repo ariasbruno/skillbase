@@ -3,7 +3,7 @@ export const es = {
   USAGE: 'Uso:',
   COMMANDS: 'Comandos:',
   OPTIONS: 'Opciones comunes:',
-  SHORTCUTS: 'Atajos: l=ls, h=-h, a=add, i=install, rm=remove, c=check, up=update, m=migrate',
+  SHORTCUTS: 'Atajos: l=ls, h=-h, a=add, i=install, rm=remove, c=check, up=update, m=migrate, cfg=config',
   HELP_FOOTER: 'Usa {cmd} para ver todas las opciones y comandos.',
   USE_HELP: 'Usa {cmd} para ver todas las opciones y comandos.',
   CANCELLED: 'Operación cancelada.',
@@ -27,6 +27,8 @@ export const es = {
   DESC_MIGRATE_SHORT: 'Migrar o promover skills locales',
   DESC_LANG: 'Cambia el idioma de la herramienta (en|es)',
   DESC_LANG_SHORT: 'Cambiar idioma de la CLI',
+  DESC_CONFIG: 'Configura fuentes de skills y preferencias',
+  DESC_CONFIG_SHORT: 'Configurar skillbase',
 
   // Options info
   OPT_REMOTE: 'Operar con repositorios remotos (GitHub/GitLab)',
@@ -117,4 +119,17 @@ export const es = {
 
   INIT_HARD_TITLE: 'Init --hard: selecciona skills recomendadas por nombre y tags',
   INIT_TITLE: 'Init: selecciona skills recomendadas por nombre',
+
+  // Config
+  CONFIG_SOURCES_TITLE: 'Selecciona las fuentes de skills que utilizas',
+  CONFIG_SOURCES_SAVED: '{count} fuentes de skills configuradas.',
+  CONFIG_SOURCES_RESET: 'Fuentes reseteadas. Se usarán todas las rutas por defecto.',
+  CONFIG_SOURCES_DETAIL_SKILLS: '{count} skills',
+  CONFIG_SOURCES_DETAIL_EMPTY: 'vacía',
+  CONFIG_SOURCES_DETAIL_NOT_FOUND: 'no encontrada',
+  CONFIG_CURRENT_TITLE: 'Configuración actual',
+  CONFIG_CURRENT_SOURCES: 'Fuentes: {list}',
+  CONFIG_CURRENT_SOURCES_ALL: 'Fuentes: todas (por defecto)',
+  CONFIG_CURRENT_LANG: 'Idioma: {lang}',
+  CONFIG_UNKNOWN_SUB: 'Subcomando desconocido: {sub}. Usa: config sources',
 };

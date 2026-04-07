@@ -53,6 +53,17 @@ export function saveConfig(config) {
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 }
 
+/**
+ * Devuelve las fuentes configuradas por el usuario, o null si no hay filtro.
+ */
+export function getConfiguredSources() {
+  const config = getConfig();
+  if (Array.isArray(config.sources) && config.sources.length > 0) {
+    return config.sources;
+  }
+  return null;
+}
+
 export function getProjectRoot(cwd = process.cwd()) {
   return cwd;
 }
@@ -66,67 +77,91 @@ export function getManifestPath(cwd = process.cwd()) {
 }
 
 export const GLOBAL_MIGRATE_PATHS = [
+  // Universal / shared (~/.agents, ~/.config/agents)
   '~/.agents/skills',
   '~/.config/agents/skills',
-  '~/.gemini/antigravity/skills',
+  // Per-agent global dirs (alphabetical by agent name)
+  '~/.adal/skills',
   '~/.augment/skills',
   '~/.bob/skills',
   '~/.claude/skills',
-  '~/.codebuddy/skills',
+  '~/.clawdbot/skills',
   '~/.codex/skills',
+  '~/.codebuddy/skills',
+  '~/.commandcode/skills',
+  '~/.continue/skills',
   '~/.snowflake/cortex/skills',
   '~/.config/crush/skills',
   '~/.cursor/skills',
   '~/.deepagents/agent/skills',
-  '~/.dvinci/skills',
+  '~/.factory/skills',
+  '~/.firebender/skills',
+  '~/.gemini/antigravity/skills',
   '~/.gemini/skills',
   '~/.copilot/skills',
   '~/.config/goose/skills',
   '~/.iflow/skills',
   '~/.junie/skills',
   '~/.kilocode/skills',
-  '~/.molten/skills',
-  '~/.config/mux/skills',
-  '~/.nugget/skills',
-  '~/.openclaw/skills',
-  '~/.clawdbot/skills',
+  '~/.kiro/skills',
+  '~/.kode/skills',
+  '~/.mcpjam/skills',
   '~/.moltbot/skills',
+  '~/.mux/skills',
+  '~/.neovate/skills',
+  '~/.openclaw/skills',
+  '~/.config/opencode/skills',
+  '~/.openhands/skills',
+  '~/.pi/agent/skills',
+  '~/.pochi/skills',
+  '~/.qoder/skills',
   '~/.qwen/skills',
   '~/.roo/skills',
   '~/.trae/skills',
   '~/.trae-cn/skills',
-  '~/.void/skills',
+  '~/.vibe/skills',
   '~/.codeium/windsurf/skills',
-  '~/.config/workos/skills',
   '~/.zencoder/skills'
 ];
 
 export const PROJECT_MIGRATE_PATHS = [
+  // Universal
   '.agents/skills',
   '.agents',
   '.agent',
+  // Per-agent project dirs (alphabetical)
+  '.adal/skills',
   '.augment/skills',
   '.bob/skills',
   '.claude/skills',
   '.codebuddy/skills',
   '.codex/skills',
+  '.commandcode/skills',
+  '.continue/skills',
   '.cortex/skills',
   '.crush/skills',
-  '.dvinci/skills',
+  '.factory/skills',
+  '.firebender/skills',
   '.goose/skills',
   '.iflow/skills',
   '.junie/skills',
   '.kilocode/skills',
-  '.molten/skills',
+  '.kiro/skills',
+  '.kode/skills',
+  '.mcpjam/skills',
   '.mux/skills',
-  '.nugget/skills',
+  '.neovate/skills',
+  '.openhands/skills',
+  '.pi/skills',
+  '.pochi/skills',
+  '.qoder/skills',
   '.qwen/skills',
+  '.roo/skills',
   '.trae/skills',
   '.trae-cn/skills',
-  '.roo/skills',
-  '.void/skills',
+  '.vibe/skills',
   '.windsurf/skills',
-  '.workos/skills',
   '.zencoder/skills',
   'skills'
 ];
+

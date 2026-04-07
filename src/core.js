@@ -9,6 +9,7 @@ import {
   getGlobalSkillsDir, 
   getProjectRoot, 
   getProjectSkillsDir, 
+  getConfiguredSources,
   PROJECT_AGENTS_DIR, 
   PROJECT_SKILLS_DIR,
   GLOBAL_MIGRATE_PATHS,
@@ -701,10 +702,51 @@ export async function extractSkillMetadata(skillPath) {
 }
 
 /**
+ * Lista todas las rutas de migración disponibles con su estado.
+ */
+export async function listAvailableSources({ fromProject = false } = {}) {
+  const rawPaths = fromProject ? PROJECT_MIGRATE_PATHS : GLOBAL_MIGRATE_PATHS;
+  const home = os.homedir();
+  const results = [];
+
+  for (const rawPath of rawPaths) {
+    const fullPath = rawPath.startsWith('~') 
+      ? path.join(home, rawPath.slice(1)) 
+      : rawPath;
+
+    let skillCount = 0;
+    let pathExists = false;
+
+    try {
+      if (await exists(fullPath)) {
+        pathExists = true;
+        const entries = await fs.readdir(fullPath, { withFileTypes: true });
+        skillCount = entries.filter(e => e.isDirectory() && !e.name.startsWith('.')).length;
+      }
+    } catch {
+      // Ignorar errores de acceso
+    }
+
+    results.push({
+      path: rawPath,
+      fullPath,
+      exists: pathExists,
+      skillCount
+    });
+  }
+
+  return results;
+}
+
+/**
  * Escanea múltiples rutas en busca de skills.
  */
 export async function scanMigrationSources({ fromProject = false, cwd = process.cwd() } = {}) {
-  const rawPaths = fromProject ? PROJECT_MIGRATE_PATHS : GLOBAL_MIGRATE_PATHS;
+  const allPaths = fromProject ? PROJECT_MIGRATE_PATHS : GLOBAL_MIGRATE_PATHS;
+  const configuredSources = getConfiguredSources();
+  const rawPaths = configuredSources 
+    ? allPaths.filter(p => configuredSources.includes(p))
+    : allPaths;
   const home = os.homedir();
   const root = getProjectRoot(cwd);
 

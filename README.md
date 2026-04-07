@@ -76,6 +76,7 @@ skillbase install
 | `skillbase check [-r]` | `c` | Check for updates. With `-r`, searches only in remote sources. |
 | `skillbase update [<skill>] [-r] [-f]` | `up` | Update one or all skills. `-r` for remote, `-f` to force. |
 | `skillbase migrate [-p] [-y]` | `m` | Migrate (~/.agents) or **promote** local skills with `-p`. Use `-y` for **auto-mode**. |
+| `skillbase config [sources]` | `cfg` | Configure skill sources and preferences. Use `sources --reset` to restore defaults. |
 | `skillbase lang <en\|es>` | | Change CLI language. |
 
 ### 🚩 Detailed Flags
@@ -89,7 +90,7 @@ skillbase install
 
 ### ⌨️ Command Aliases
 For speed, you can use initials:
-`l` (ls), `a` (add), `i` (install), `rm` (remove), `c` (check), `up` (update), `m` (migrate).
+`l` (ls), `a` (add), `i` (install), `rm` (remove), `c` (check), `up` (update), `m` (migrate), `cfg` (config).
 
 ---
 

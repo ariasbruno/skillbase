@@ -9,6 +9,7 @@ import {
   initProject,
   installFromManifest,
   installRemoteSkillRef,
+  listAvailableSources,
   listGlobalSkills,
   listProjectSkills,
   migrateAgentsSkillsToSkillbase,
@@ -82,6 +83,7 @@ function printHelp() {
     ['check', ``, t('DESC_CHECK')],
     ['update', `[skill]`, t('DESC_UPDATE')],
     ['migrate', ``, t('DESC_MIGRATE')],
+    ['config', `[sub]`, t('DESC_CONFIG')],
     ['lang', `<lang>`, t('DESC_LANG')],
   ];
 
@@ -122,6 +124,7 @@ function printCommandList() {
     ['add', t('DESC_ADD_SHORT')],
     ['install', t('DESC_INSTALL_SHORT')],
     ['migrate', t('DESC_MIGRATE_SHORT')],
+    ['config', t('DESC_CONFIG_SHORT')],
     ['lang', t('DESC_LANG_SHORT')],
   ];
 
@@ -158,7 +161,8 @@ export async function runCLI(argv) {
     rm: 'remove',
     c: 'check',
     up: 'update',
-    m: 'migrate'
+    m: 'migrate',
+    cfg: 'config'
   };
   const command = commandAliases[rawCommand] ?? rawCommand;
 
@@ -443,6 +447,91 @@ export async function runCLI(argv) {
         console.log(`${cyan(S_BAR_END)}  ${dim2(t('MIGRATE_NONE'))}\n`);
       }
       return;
+    }
+
+    case 'config': {
+      const subcommand = maybeSkill;
+      const resetFlag = hasFlag(args, '--reset');
+
+      if (!subcommand || subcommand === 'show') {
+        // Mostrar configuración actual
+        const config = getConfig();
+        console.log(`${cyan(S_BAR_START)}  ${bold(t('CONFIG_CURRENT_TITLE'))}`);
+        console.log(`${cyan(S_BAR)}  ${t('CONFIG_CURRENT_LANG', { lang: bold(config.lang || 'en') })}`);
+        if (Array.isArray(config.sources) && config.sources.length > 0) {
+          console.log(`${cyan(S_BAR)}  ${t('CONFIG_CURRENT_SOURCES', { list: '' })}`);
+          for (const src of config.sources) {
+            console.log(`${cyan(S_BAR)}    ${dim2(S_POINTER)} ${text(src)}`);
+          }
+        } else {
+          console.log(`${cyan(S_BAR)}  ${t('CONFIG_CURRENT_SOURCES_ALL')}`);
+        }
+        console.log(`${cyan(S_BAR_END)}\n`);
+        return;
+      }
+
+      if (subcommand === 'sources') {
+        if (resetFlag) {
+          const config = getConfig();
+          delete config.sources;
+          saveConfig(config);
+          console.log(`${cyan(S_BAR_START)}  ${green(S_CHECK)} ${t('CONFIG_SOURCES_RESET')}`);
+          console.log(`${cyan(S_BAR_END)}\n`);
+          return;
+        }
+
+        // Listar todas las rutas disponibles con estado, ordenar por cantidad de skills
+        const available = (await listAvailableSources()).sort((a, b) => {
+          // Primero las que tienen skills (desc), luego vacías, luego no encontradas
+          if (a.exists !== b.exists) return a.exists ? -1 : 1;
+          return b.skillCount - a.skillCount;
+        });
+        const config = getConfig();
+        const currentSources = Array.isArray(config.sources) ? config.sources : [];
+
+        // Preparar opciones para el selector: pre-seleccionar las ya configuradas
+        const skillOptions = available.map(s => {
+          let detail;
+          if (!s.exists) detail = dim2(t('CONFIG_SOURCES_DETAIL_NOT_FOUND'));
+          else if (s.skillCount === 0) detail = dim2(t('CONFIG_SOURCES_DETAIL_EMPTY'));
+          else detail = green(t('CONFIG_SOURCES_DETAIL_SKILLS', { count: s.skillCount }));
+
+          return {
+            name: s.path,
+            detail
+          };
+        });
+
+        const { selected, cancelled } = await selectSkillsInteractive({
+          skills: skillOptions,
+          title: t('CONFIG_SOURCES_TITLE')
+        });
+
+        if (cancelled) {
+          console.log(`${cyan(S_BAR_END)}  ${dim2(t('CANCELLED'))}\n`);
+          return;
+        }
+
+        if (selected.length === 0 || selected.length === available.length) {
+          // Si selecciona todas o ninguna, es equivalente a "todas" (reset)
+          delete config.sources;
+          saveConfig(config);
+          console.log(`${cyan(S_BAR)}`);
+          console.log(`${cyan(S_BAR_END)}  ${green(S_CHECK)} ${t('CONFIG_SOURCES_RESET')}\n`);
+        } else {
+          config.sources = selected;
+          saveConfig(config);
+          console.log(`${cyan(S_BAR)}`);
+          console.log(`${cyan(S_BAR)}  ${green(S_CHECK)} ${t('CONFIG_SOURCES_SAVED', { count: bold(selected.length) })}`);
+          for (const src of selected) {
+            console.log(`${cyan(S_BAR)}    ${dim2(S_POINTER)} ${text(src)}`);
+          }
+          console.log(`${cyan(S_BAR_END)}\n`);
+        }
+        return;
+      }
+
+      throw new Error(t('CONFIG_UNKNOWN_SUB', { sub: subcommand }));
     }
 
     case 'lang': {

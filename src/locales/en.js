@@ -3,7 +3,7 @@ export const en = {
   USAGE: 'Usage:',
   COMMANDS: 'Commands:',
   OPTIONS: 'Common Options:',
-  SHORTCUTS: 'Shortcuts: l=ls, h=-h, a=add, i=install, rm=remove, c=check, up=update, m=migrate',
+  SHORTCUTS: 'Shortcuts: l=ls, h=-h, a=add, i=install, rm=remove, c=check, up=update, m=migrate, cfg=config',
   HELP_FOOTER: 'Use {cmd} to see all options and commands.',
   USE_HELP: 'Use {cmd} to see all options and commands.',
   CANCELLED: 'Operation cancelled.',
@@ -27,6 +27,8 @@ export const en = {
   DESC_MIGRATE_SHORT: 'Migrate or promote local skills',
   DESC_LANG: 'Change tool language (en|es)',
   DESC_LANG_SHORT: 'Change CLI language',
+  DESC_CONFIG: 'Configure skill sources and preferences',
+  DESC_CONFIG_SHORT: 'Configure skillbase',
 
   // Options info
   OPT_REMOTE: 'Operate with remote repositories (GitHub/GitLab)',
@@ -117,4 +119,17 @@ export const en = {
   
   INIT_HARD_TITLE: 'Init --hard: select skills recommended by name and tags',
   INIT_TITLE: 'Init: select skills recommended by name',
+
+  // Config
+  CONFIG_SOURCES_TITLE: 'Select the skill sources you use',
+  CONFIG_SOURCES_SAVED: '{count} skill sources configured.',
+  CONFIG_SOURCES_RESET: 'Sources reset. All default paths will be used.',
+  CONFIG_SOURCES_DETAIL_SKILLS: '{count} skills',
+  CONFIG_SOURCES_DETAIL_EMPTY: 'empty',
+  CONFIG_SOURCES_DETAIL_NOT_FOUND: 'not found',
+  CONFIG_CURRENT_TITLE: 'Current configuration',
+  CONFIG_CURRENT_SOURCES: 'Sources: {list}',
+  CONFIG_CURRENT_SOURCES_ALL: 'Sources: all (default)',
+  CONFIG_CURRENT_LANG: 'Language: {lang}',
+  CONFIG_UNKNOWN_SUB: 'Unknown subcommand: {sub}. Use: config sources',
 };
