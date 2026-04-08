@@ -5,11 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.0] — 2026-04-07
 
 ### Added
 - Lightweight zero-dependency background update notifier for the CLI, with opt-out via `skillbase config autoupdate off`
 - `skillbase config lang <en|es>` for direct CLI language configuration
+- Added extensive cross-agent directory support for discovering and migrating skills (covering +30 AI assistants like Cursor, Windsurf, Copilot, Gemini, Roo, Claude, etc.)
 - `skillbase config sources` — interactive command to select which directories are scanned during migration, reducing noise from unused editor paths
 - `skillbase migrate` — migrate skills from `~/.agents/skills` to the new global store at `~/.skillbase/skills`; supports `--promote` to push project skills to the global registry and `--force` to allow overwrites
 - Interactive multi-selection flow for `skillbase remove` when no skill is specified
@@ -74,6 +75,7 @@ Initial public release under the scoped package name `@ariasbruno/skillbase`.
 
 ---
 
-[Unreleased]: https://github.com/ariasbruno/skillbase/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/ariasbruno/skillbase/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/ariasbruno/skillbase/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ariasbruno/skillbase/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ariasbruno/skillbase/releases/tag/v1.0.0

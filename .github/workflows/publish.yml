@@ -1,11 +1,8 @@
 name: Publish to NPM
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'package.json'
+  release:
+    types: [published]
 
 jobs:
   publish:
@@ -16,6 +13,11 @@ jobs:
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Install and Build
+        run: |
+          npm install
+          npm run build
 
       - name: Check if version is already published
         id: check_version

@@ -1,2 +1,0 @@
-import{a as m,c as $}from"./chunk-2ZOVQU27.js";import{n as E}from"./chunk-ZTEFKAGY.js";import{A as i,G as e,H as c,I as _,l,m as t,o as S,q as o,r as s}from"./chunk-WJFVDNQF.js";async function g(n){let r=$(n,1);console.log(`${o(c)}  ${s(l("UPDATE_START"))}`),await E({skillName:r,remoteOnly:m(n,"--remote","-remote","-r"),force:m(n,"--force","-f")}),console.log(`${o(e)}  ${t(l("INIT_RESUMEN"))}`),console.log(r?`${o(e)}  ${S(i)} ${l("UPDATE_SINGLE_SUCCESS",{skill:t(r)})}`:`${o(e)}  ${S(i)} ${l("UPDATE_SUCCESS")}`),console.log(`${o(_)}
-`)}export{g as run};

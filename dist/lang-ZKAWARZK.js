@@ -1,2 +1,0 @@
-import{c}from"./chunk-2ZOVQU27.js";import{H as s,I as a,c as i,d as t,k as g,l as n,m as r,q as l}from"./chunk-WJFVDNQF.js";async function L(m){let o=c(m,1);if(!o||!["en","es"].includes(o))throw new Error(n("LANG_INVALID",{lang:o||"??"}));let e=i();e.lang=o,t(e),g(o);let f=o==="es"?"Espa\xF1ol":"English";console.log(`${l(s)}  ${r(n("LANG_SUCCESS",{lang:f}))}`),console.log(`${l(a)}
-`)}export{L as run};
