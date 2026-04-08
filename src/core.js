@@ -135,15 +135,17 @@ export async function addSkill(skillName, { sym = false, cwd = process.cwd() } =
   await writeManifest(manifest, cwd);
 }
 
-export async function selectSkillsInteractive({ skills = null, title = null, subtitle = null, radio = false, clearOnExit = false } = {}) {
+export async function selectSkillsInteractive({ skills = null, title = null, subtitle = null, radio = false, clearOnExit = false, actionLabel = null } = {}) {
   const skillsList = skills || await listGlobalSkills();
   if (!skillsList.length) return { selected: [], cancelled: false };
 
   const selection = await selectSkillsFromList(skillsList, {
     title: title || t('UI_SELECT_MULTIPLE'),
+    subtitle,
     requireTTYMessage: t('UI_REQUIRED_TTY'),
     radio,
-    clearOnExit
+    clearOnExit,
+    actionLabel
   });
 
   if (selection.cancelled) return selection;
@@ -172,7 +174,7 @@ export async function addSkillsInteractive({ cwd = process.cwd(), sym = false, o
   return { selected: selectedSkills, cancelled: false };
 }
 
-async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage, radio = false, clearOnExit = false } = {}) {
+async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage, radio = false, clearOnExit = false, actionLabel = null } = {}) {
   if (!input.isTTY || !output.isTTY) {
     throw new Error(requireTTYMessage || t('UI_REQUIRED_TTY'));
   }
@@ -252,7 +254,8 @@ async function selectSkillsFromList(skills, { title, subtitle, requireTTYMessage
     lines.push(`${cyan(S_BAR)}`);
     const status = `(${selected.size}/${skills.length})`;
     const page = t('UI_PAGE', { current: Math.floor(offset / pageSize) + 1, total: Math.ceil(skills.length / pageSize) });
-    const controls = t('UI_CONTROLS', { status });
+    const action = actionLabel || t('UI_ACTION_INSTALL');
+    const controls = t('UI_CONTROLS', { status, action });
     lines.push(`${cyan(S_BAR_END)}  ${dim2(`${page} · ${controls}`)}`);
 
     const outputContent = lines.join('\n');
@@ -561,28 +564,28 @@ async function getRemoteVersion(skillName) {
 
 export async function checkUpdates({ cwd = process.cwd(), remoteOnly = false } = {}) {
   const manifest = await readManifest(cwd);
-  const updates = [];
-
-  for (const skill of manifest.skills) {
-    if (remoteOnly && skill.source !== 'remote') continue;
+  
+  const updates = await Promise.all(manifest.skills.map(async (skill) => {
+    if (remoteOnly && skill.source !== 'remote') return null;
 
     if (skill.source === 'remote') {
       const latest = await getRemoteVersion(skill.name);
       if (latest && compareVersion(latest, skill.version) > 0) {
-        updates.push({ name: skill.name, current: skill.version, latest, source: 'remote' });
+        return { name: skill.name, current: skill.version, latest, source: 'remote' };
       }
-      continue;
+      return null;
     }
 
     const globalPath = path.join(getGlobalSkillsDir(), skill.name);
-    if (!(await exists(globalPath))) continue;
+    if (!(await exists(globalPath))) return null;
     const latest = await readSkillVersion(globalPath);
     if (latest && compareVersion(latest, skill.version) > 0) {
-      updates.push({ name: skill.name, current: skill.version, latest, source: 'global' });
+      return { name: skill.name, current: skill.version, latest, source: 'global' };
     }
-  }
+    return null;
+  }));
 
-  return updates;
+  return updates.filter(Boolean);
 }
 
 export async function updateSkills({ cwd = process.cwd(), skillName = null, remoteOnly = false } = {}) {
@@ -593,7 +596,7 @@ export async function updateSkills({ cwd = process.cwd(), skillName = null, remo
     return true;
   });
 
-  for (const skill of selected) {
+  await Promise.all(selected.map(async (skill) => {
     if (skill.source === 'remote') {
       await installRemoteSkill(skill.name, { cwd, force: true });
     } else {
@@ -603,7 +606,7 @@ export async function updateSkills({ cwd = process.cwd(), skillName = null, remo
       upsertSkill(nextManifest, { ...skill, version: globalVersion || skill.version, installedAt: nowISO() });
       await writeManifest(nextManifest, cwd);
     }
-  }
+  }));
 }
 
 async function getSkillTags(skillDir) {
@@ -625,15 +628,24 @@ export async function initProject({ cwd = process.cwd(), hard = false } = {}) {
 
   const globalSkills = await listGlobalSkills();
   const suggested = [];
-  for (const skill of globalSkills) {
+  
+  const tagResults = hard ? await Promise.all(
+    globalSkills.map(skill => getSkillTags(path.join(getGlobalSkillsDir(), skill)))
+  ) : [];
+
+  for (let i = 0; i < globalSkills.length; i++) {
+    const skill = globalSkills[i];
     const skillLower = skill.toLowerCase();
     const matchesByName = technologies.some((tech) => skillLower.includes(tech));
+    
     if (matchesByName) {
       suggested.push(skill);
       continue;
     }
+    
     if (!hard) continue;
-    const tags = await getSkillTags(path.join(getGlobalSkillsDir(), skill));
+    
+    const tags = tagResults[i] || [];
     if (tags.some((tag) => technologies.some((tech) => tag.includes(tech)))) {
       suggested.push(skill);
     }
@@ -648,9 +660,7 @@ export async function initProject({ cwd = process.cwd(), hard = false } = {}) {
   });
   if (selection.cancelled) return { technologies, suggested, installed: [], cancelled: true };
 
-  for (const skill of selection.selected) {
-    await addSkill(skill, { cwd, sym: false });
-  }
+  await Promise.all(selection.selected.map(skill => addSkill(skill, { cwd, sym: false })));
 
   return { technologies, suggested, installed: selection.selected, cancelled: false };
 }
@@ -763,21 +773,20 @@ export async function scanMigrationSources({ fromProject = false, cwd = process.
   const home = os.homedir();
   const root = getProjectRoot(cwd);
 
-  const sources = [];
-  for (const rawPath of rawPaths) {
+  const pathPromises = rawPaths.map(async (rawPath) => {
     const fullPath = rawPath.startsWith('~') 
       ? path.join(home, rawPath.slice(1)) 
       : path.resolve(root, rawPath);
 
-    if (!(await exists(fullPath))) continue;
+    if (!(await exists(fullPath))) return [];
 
     try {
       const stats = await fs.stat(fullPath);
-      if (!stats.isDirectory()) continue;
+      if (!stats.isDirectory()) return [];
 
       const entries = await fs.readdir(fullPath, { withFileTypes: true });
-      for (const entry of entries) {
-        if (!entry.isDirectory()) continue;
+      const entryPromises = entries.map(async (entry) => {
+        if (!entry.isDirectory()) return null;
 
         const skillPath = path.join(fullPath, entry.name);
         // Evitar carpetas ocultas comunes o utilitarias
@@ -786,21 +795,25 @@ export async function scanMigrationSources({ fromProject = false, cwd = process.
            // suele ser la carpeta raíz de agentes, no una skill.
            // Pero en PROJECT_MIGRATE_PATHS tenemos '.agents', así que debemos decidir.
            // Si '.agents' tiene una subcarpeta 'skills', preferimos esa si está en la lista.
-           continue; 
+           return null; 
         }
 
         const metadata = await extractSkillMetadata(skillPath);
-        sources.push({
+        return {
           name: entry.name,
           sourcePath: skillPath,
           originPath: fullPath,
           ...metadata
-        });
-      }
+        };
+      });
+      return (await Promise.all(entryPromises)).filter(Boolean);
     } catch {
       // Ignorar
+      return [];
     }
-  }
+  });
+  
+  const sources = (await Promise.all(pathPromises)).flat();
   return sources;
 }
 

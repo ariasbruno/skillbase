@@ -39,7 +39,8 @@ export async function run(args) {
       const { selected, cancelled } = await selectSkillsInteractive({
         skills: conflicts.map((s) => s.name),
         title: t('MIGRATE_CONFLICTS_TITLE'),
-        hint: t('MIGRATE_CONFLICTS_HINT'),
+        subtitle: t('MIGRATE_CONFLICTS_HINT'),
+        actionLabel: t('UI_ACTION_CONFIRM')
       });
 
       if (cancelled) {
@@ -61,6 +62,7 @@ export async function run(args) {
       const { selected, cancelled } = await selectSkillsInteractive({
         skills: uniques.map((s) => s.name),
         title: t('MIGRATE_UNIQUES_TITLE', { count: uniques.length }),
+        actionLabel: t('UI_ACTION_CONFIRM')
       });
 
       if (cancelled) {
@@ -163,6 +165,7 @@ async function resolveDuplicatesFlow(duplicates) {
       }),
       title: t('MIGRATE_DUPLICATES_TITLE', { count: remaining.length }),
       subtitle: t('MIGRATE_RESOLVE_SELECT'),
+      actionLabel: t('UI_ACTION_RESOLVE')
     });
 
     if (cancelled || selectedNames.length === 0) break;
@@ -210,6 +213,7 @@ async function selectActionMenu() {
     title: t('MIGRATE_ACTION_MENU'),
     radio: true,
     clearOnExit: true,
+    actionLabel: t('UI_ACTION_CONFIRM')
   });
 
   if (cancelled || selected.length === 0) return null;

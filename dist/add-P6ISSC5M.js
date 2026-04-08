@@ -1,0 +1,4 @@
+import{a as _}from"./chunk-7NZM7SMA.js";import{a as E,c as a}from"./chunk-2ZOVQU27.js";import{f as g,h as D}from"./chunk-ZTEFKAGY.js";import{A as m,G as S,H as t,I as n,l,m as e,o as c,q as o,r as $}from"./chunk-WJFVDNQF.js";async function p(s){let i=a(s,1);if(!i){_();let r=await D({sym:E(s,"--sym","-s")});if(r.cancelled){console.log(`${o(t)}  ${$(l("SELECTION_CANCELLED"))}`),console.log(`${o(n)}`);return}if(!r.selected.length){console.log(`${o(n)}  ${$(l("ADD_NO_SELECTED"))}
+`);return}console.log(`${o(t)}  ${e(l("ADD_RESUMEN"))}`),console.log(`${o(S)}  ${c(m)} ${l("INIT_INSTALLED",{list:e(r.selected.join(", "))})}`),console.log(`${o(n)}
+`);return}await g(i,{sym:E(s,"--sym","-s")}),console.log(`${o(t)}  ${e(l("ADD_RESUMEN"))}`),console.log(`${o(S)}  ${c(m)} ${l("ADD_SUCCESS",{skill:e(i)})}`),console.log(`${o(n)}
+`)}export{p as run};

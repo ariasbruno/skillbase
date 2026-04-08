@@ -14,11 +14,11 @@ Estas instrucciones aplican a todo el árbol del proyecto (`skillbase`).
 ## Reglas de implementación
 1. Mantener el código en JavaScript ESM (`"type": "module"`).
 2. Evitar dependencias externas salvo necesidad clara.
-3. Toda lógica de negocio va en `src/core.js`; `src/cli.js` sólo parsea/coordina comandos.
-4. Toda visualización de estado sucede en `src/cli.js`.
+3. Toda lógica de negocio va en `src/core.js`; el parseo de comandos está modularizado en `src/commands/` y coordinado por `src/cli.js`.
+4. Toda visualización de estado de manera TTY se apoya en `src/ui.js` y dentro de cada comando.
 5. Mantener soporte bilingüe (ES/EN) mediante `src/i18n.js` y sus locales.
 6. Si agregas o cambias comandos, actualiza:
-   - ayuda en `src/cli.js`
+   - los "loaders" dinámicos en `src/cli.js`
    - diccionarios en `src/locales/`
    - secciones de comandos en `README.md` y `README_es.md`
 
@@ -40,6 +40,8 @@ Estas instrucciones aplican a todo el árbol del proyecto (`skillbase`).
 Antes de cerrar cambios ejecutar:
 ```bash
 npm run lint
+npm run test
+npm run build
 node bin/skillbase.js -h
 ```
 

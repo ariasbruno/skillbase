@@ -72,12 +72,12 @@ skillbase install
 | `skillbase add [<skill>] [-s]` | `a` | Install global skill. Without name, opens **interactive selector**. `-s` for symlinks. |
 | `skillbase install` | `i` | Install from `skillbase.json`. Supports `-r` (remote) and `-f` (force). |
 | `skillbase install <ref> -r` | `i -r` | Install remote skill (URL or GitHub). Requires `-k <name>` if it's a Git repo. |
-| `skillbase remove <skill> [-g]` | `rm` | Remove skill from project. Use `-g` to remove from global registry instead. |
+| `skillbase remove [<skill>] [-g] [-a]` | `rm` | Remove skill from project. Without name, opens **interactive selector**. Use `-a` to remove all, or `-g` for global registry. |
 | `skillbase check [-r]` | `c` | Check for updates. With `-r`, searches only in remote sources. |
 | `skillbase update [<skill>] [-r] [-f]` | `up` | Update one or all skills. `-r` for remote, `-f` to force. |
 | `skillbase migrate [-p] [-y]` | `m` | Migrate (~/.agents) or **promote** local skills with `-p`. Use `-y` for **auto-mode**. |
-| `skillbase config [sources]` | `cfg` | Configure skill sources and preferences. Use `sources --reset` to restore defaults. |
-| `skillbase lang <en\|es>` | | Change CLI language. |
+| `skillbase config [sources\|autoupdate\|lang]` | `cfg` | Configure skill sources, auto-updates, and language. |
+| `skillbase lang <en\|es>` | | Change CLI language (alias for `config lang`). |
 
 ### 🚩 Detailed Flags
 - `-h`, `--help`: Show detailed help.
@@ -86,7 +86,8 @@ skillbase install
 - `-f`, `--force`: Ignore "already exists" errors and overwrite files/configurations.
 - `-k`, `--skill`: Name of the specific skill to extract when installing from a GitHub repository.
 - `-g`, `--global`: Operate on the global registry (for `ls` and `remove`).
-- `-y`, `--all`: Perform automated migration without prompts (installs and overwrites everything).
+- `-y`, `--yes`: Perform automated migration without prompts (installs and overwrites everything).
+- `-a`, `--all`: Removes all installed skills within a specific context (used with `remove`).
 
 ### ⌨️ Command Aliases
 For speed, you can use initials:

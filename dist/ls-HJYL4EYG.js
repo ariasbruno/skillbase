@@ -1,0 +1,3 @@
+import{a as L}from"./chunk-2ZOVQU27.js";import{c as T,d as m}from"./chunk-Q5IZPXCV.js";import{A as a,F as _,G as S,H as f,I as E,b as t,g as n,l as s,m as r,o as c,p as g,q as o,r as e,s as $}from"./chunk-ZCVFFPNZ.js";async function k(h){if(L(h,"--global","-g")){let l=await T();l.length?(console.log(`${o(f)}  ${r(s("LS_GLOBAL_TITLE",{dir:e(t())}))}`),l.forEach(i=>console.log(`${o(S)}  ${c(a)} ${$(i)}`)),console.log(`${o(E)}
+`)):console.log(`${g(_)} ${s("LS_GLOBAL_EMPTY",{dir:e(t())})}`)}else{let l=await m();l.length?(console.log(`${o(f)}  ${r(s("LS_PROJECT_TITLE",{dir:e(n())}))}`),l.forEach(i=>console.log(`${o(S)}  ${c(a)} ${$(i)}`)),console.log(`${o(E)}
+`)):console.log(`${g(_)} ${s("LS_PROJECT_EMPTY",{dir:e(n())})}`)}}export{k as run};

@@ -11,6 +11,9 @@ export async function run(args) {
     const config = getConfig();
     console.log(`${cyan(S_BAR_START)}  ${bold(t('CONFIG_CURRENT_TITLE'))}`);
     console.log(`${cyan(S_BAR)}  ${t('CONFIG_CURRENT_LANG', { lang: bold(config.lang || 'en') })}`);
+    
+    const updateState = config.autoUpdate !== false ? 'ON' : 'OFF';
+    console.log(`${cyan(S_BAR)}  ${t('CONFIG_AUTOUPDATE_STATUS', { state: bold(updateState) })}`);
 
     if (Array.isArray(config.sources) && config.sources.length > 0) {
       console.log(`${cyan(S_BAR)}  ${t('CONFIG_CURRENT_SOURCES', { list: '' })}`);
@@ -22,6 +25,24 @@ export async function run(args) {
     }
     console.log(`${cyan(S_BAR_END)}\n`);
     return;
+  }
+
+  if (subcommand === 'autoupdate') {
+    const state = getPositional(args, 2);
+    if (!state || (state !== 'on' && state !== 'off')) {
+      throw new Error(t('CONFIG_AUTOUPDATE_USAGE'));
+    }
+    const config = getConfig();
+    config.autoUpdate = state === 'on';
+    saveConfig(config);
+    console.log(`${cyan(S_BAR_START)}  ${green(S_CHECK)} ${t('CONFIG_AUTOUPDATE_SAVED', { state: bold(state.toUpperCase()) })}`);
+    console.log(`${cyan(S_BAR_END)}\n`);
+    return;
+  }
+
+  if (subcommand === 'lang') {
+    const { run: runLang } = await import('./lang.js');
+    return runLang(['lang', getPositional(args, 2)]);
   }
 
   if (subcommand === 'sources') {
@@ -55,6 +76,7 @@ export async function run(args) {
     const { selected, cancelled } = await selectSkillsInteractive({
       skills: skillOptions,
       title: t('CONFIG_SOURCES_TITLE'),
+      actionLabel: t('UI_ACTION_CONFIRM')
     });
 
     if (cancelled) {

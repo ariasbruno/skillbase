@@ -30,6 +30,7 @@ export async function run(args) {
       title: t('REMOVE_ALL_CONFIRM_PROMPT'),
       radio: true,
       clearOnExit: true,
+      actionLabel: t('UI_ACTION_CONFIRM')
     });
 
     if (cancelled || !answer.length || answer[0] === t('REMOVE_ALL_NO')) {
@@ -54,6 +55,7 @@ export async function run(args) {
       skills,
       title: t('REMOVE_SELECT_TITLE'),
       clearOnExit: true,
+      actionLabel: t('UI_ACTION_REMOVE')
     });
 
     if (cancelled || !selected.length) {

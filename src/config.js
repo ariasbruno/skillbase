@@ -34,14 +34,15 @@ export function getGlobalConfigPath() {
 
 export function getConfig() {
   const configPath = getGlobalConfigPath();
+  const defaultConfig = { lang: 'en', autoUpdate: true };
   try {
     if (fs.existsSync(configPath)) {
-      return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      return { ...defaultConfig, ...JSON.parse(fs.readFileSync(configPath, 'utf8')) };
     }
   } catch {
     // Omitir errores de lectura
   }
-  return { lang: 'en' };
+  return defaultConfig;
 }
 
 export function saveConfig(config) {

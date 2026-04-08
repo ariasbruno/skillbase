@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import { getManifestPath, exists } from './config.js';
 
+const manifestCache = new Map();
+
 async function safeReadJson(file, fallback) {
   if (!(await exists(file))) return fallback;
   try {
@@ -17,13 +19,20 @@ export async function writeJson(file, data) {
 }
 
 export async function readManifest(cwd = process.cwd()) {
-  const manifest = await safeReadJson(getManifestPath(cwd), { skills: [] });
+  const path = getManifestPath(cwd);
+  if (manifestCache.has(path)) {
+    return JSON.parse(JSON.stringify(manifestCache.get(path)));
+  }
+  const manifest = await safeReadJson(path, { skills: [] });
   if (!Array.isArray(manifest.skills)) manifest.skills = [];
+  manifestCache.set(path, JSON.parse(JSON.stringify(manifest)));
   return manifest;
 }
 
 export async function writeManifest(manifest, cwd = process.cwd()) {
-  await writeJson(getManifestPath(cwd), manifest);
+  const path = getManifestPath(cwd);
+  await writeJson(path, manifest);
+  manifestCache.set(path, JSON.parse(JSON.stringify(manifest)));
 }
 
 export function upsertSkill(manifest, record) {

@@ -8,8 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `skillbase config sources` — interactive command to select which directories are scanned during migration, reducing noise from unused editor paths (`2026-04-07`)
-- `skillbase migrate` — migrate skills from `~/.agents/skills` to the new global store at `~/.skillbase/skills`; supports `--promote` to push project skills to the global registry and `--force` to allow overwrites (`2026-04-07`)
+- Lightweight zero-dependency background update notifier for the CLI, with opt-out via `skillbase config autoupdate off`
+- `skillbase config lang <en|es>` for direct CLI language configuration
+- `skillbase config sources` — interactive command to select which directories are scanned during migration, reducing noise from unused editor paths
+- `skillbase migrate` — migrate skills from `~/.agents/skills` to the new global store at `~/.skillbase/skills`; supports `--promote` to push project skills to the global registry and `--force` to allow overwrites
+- Interactive multi-selection flow for `skillbase remove` when no skill is specified
+- `--all` / `-a` flag for `skillbase remove` with safety confirmation prompt
+
+### Changed
+- Standardized UI controls globally with context-aware action labels
+- Refactored CLI architecture: commands extracted to `src/commands/` for modularity
+- Implemented Lazy-Loading for commands via dynamic imports, cutting startup time effectively
+- Integrated `esbuild` to generate a minified, production-ready bundle in `dist/`
+- Parallelized I/O-intensive core operations (`initProject`, `checkUpdates`, `scanMigrationSources`, `updateSkills`) safely with `Promise.all`
+- Introduced an in-memory cache for `readManifest` to eliminate redundant disk reads across commands
 
 ---
 

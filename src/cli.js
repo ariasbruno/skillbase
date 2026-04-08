@@ -2,39 +2,28 @@ import { t } from './i18n.js';
 import { printHelp, printCommandList } from './ui.js';
 import { hasFlag } from './args.js';
 
-import * as lsCmd      from './commands/ls.js';
-import * as initCmd    from './commands/init.js';
-import * as addCmd     from './commands/add.js';
-import * as installCmd from './commands/install.js';
-import * as removeCmd  from './commands/remove.js';
-import * as checkCmd   from './commands/check.js';
-import * as updateCmd  from './commands/update.js';
-import * as migrateCmd from './commands/migrate.js';
-import * as configCmd  from './commands/config.js';
-import * as langCmd    from './commands/lang.js';
-
-const COMMANDS = {
-  ls:      lsCmd,
-  init:    initCmd,
-  add:     addCmd,
-  install: installCmd,
-  remove:  removeCmd,
-  check:   checkCmd,
-  update:  updateCmd,
-  migrate: migrateCmd,
-  config:  configCmd,
-  lang:    langCmd,
+const COMMAND_LOADERS = {
+  ls: () => import('./commands/ls.js'),
+  init: () => import('./commands/init.js'),
+  add: () => import('./commands/add.js'),
+  install: () => import('./commands/install.js'),
+  remove: () => import('./commands/remove.js'),
+  check: () => import('./commands/check.js'),
+  update: () => import('./commands/update.js'),
+  migrate: () => import('./commands/migrate.js'),
+  config: () => import('./commands/config.js'),
+  lang: () => import('./commands/lang.js'),
 };
 
 const ALIASES = {
-  h:   '-h',
-  l:   'ls',
-  a:   'add',
-  i:   'install',
-  rm:  'remove',
-  c:   'check',
-  up:  'update',
-  m:   'migrate',
+  h: '-h',
+  l: 'ls',
+  a: 'add',
+  i: 'install',
+  rm: 'remove',
+  c: 'check',
+  up: 'update',
+  m: 'migrate',
   cfg: 'config',
 };
 
@@ -56,10 +45,11 @@ export async function runCLI(argv) {
     return;
   }
 
-  const cmd = COMMANDS[command];
-  if (!cmd) {
+  const commandLoader = COMMAND_LOADERS[command];
+  if (!commandLoader) {
     throw new Error(t('UNKNOWN_COMMAND', { cmd: command }));
   }
 
+  const cmd = await commandLoader();
   await cmd.run(args);
 }

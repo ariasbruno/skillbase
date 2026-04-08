@@ -72,12 +72,12 @@ skillbase install
 | `skillbase add [<skill>] [-s]` | `a` | Instalar skill global. Sin nombre, abre el **selector interactivo**. `-s` para symlinks. |
 | `skillbase install` | `i` | Instala desde el manifiesto `skillbase.json`. Soporta `-r` (remotas) y `-f` (forzar). |
 | `skillbase install <ref> -r` | `i -r` | Instala skill remota (URL o GitHub). Requiere `-k <name>` si es un repo Git. |
-| `skillbase remove <skill> [-g]` | `rm` | Elimina skill del proyecto. Usa `-g` para eliminarla del registro global. |
+| `skillbase remove [<skill>] [-g] [-a]` | `rm` | Elimina skill del proyecto. Sin nombre, abre el **selector interactivo**. Usa `-a` para borrar todas, o `-g` para el registro global. |
 | `skillbase check [-r]` | `c` | Busca actualizaciones. Con `-r` busca solo en fuentes remotas. |
 | `skillbase update [<skill>] [-r] [-f]` | `up` | Actualiza una o todas las skills. `-r` para remotas, `-f` para forzar. |
 | `skillbase migrate [-p] [-y]` | `m` | Migra (~/.agents) o **promueve** skills locales con `-p`. Usa `-y` para modo automático. |
-| `skillbase config [sources]` | `cfg` | Configura fuentes de skills y preferencias. Usa `sources --reset` para restaurar. |
-| `skillbase lang <en|es>` | | Cambia el idioma de la CLI. |
+| `skillbase config [sources\|autoupdate\|lang]` | `cfg` | Configura fuentes de skills, actualización y el idioma de la CLI. |
+| `skillbase lang <en|es>` | | Cambia el idioma de la CLI (alias de `config lang`). |
 
 ### 🚩 Flags Detalladas
 - `-h`, `--help`: Muestra la ayuda detallada.
@@ -86,7 +86,8 @@ skillbase install
 - `-f`, `--force`: Ignora errores de "ya existe" y sobrescribe archivos/configuraciones.
 - `-k`, `--skill`: Nombre de la skill específica a extraer cuando se instala desde un repositorio GitHub.
 - `-g`, `--global`: Para operar sobre el registro global (en `ls` y `remove`).
-- `-y`, `--all`: Realiza la migración automática sin preguntas (instala y sobrescribe todo).
+- `-y`, `--yes`: Realiza la migración automática sin preguntas (instala y sobrescribe todo).
+- `-a`, `--all`: Elimina todas las skills instaladas dentro de un contexto específico (usado con `remove`).
 
 ### ⌨️ Aliases de comandos
 Para mayor velocidad, puedes usar las iniciales:

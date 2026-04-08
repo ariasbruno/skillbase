@@ -9,7 +9,8 @@
   "scripts": {
     "start": "node bin/skillbase.js -h",
     "test": "node --test",
-    "lint": "for f in bin/skillbase.js src/*.js src/commands/*.js src/locales/*.js; do node --check \"$f\" || exit 1; done"
+    "lint": "for f in bin/skillbase.js src/*.js src/commands/*.js src/locales/*.js; do node --check \"$f\" || exit 1; done",
+    "build": "esbuild src/cli.js --bundle --platform=node --target=node18 --format=esm --splitting --outdir=dist --minify"
   },
   "license": "MIT",
   "repository": {
@@ -25,7 +26,7 @@
   },
   "files": [
     "bin/",
-    "src/",
+    "dist/",
     "README.md",
     "LICENSE"
   ],
@@ -39,6 +40,7 @@
     "developer-tools"
   ],
   "devDependencies": {
+    "esbuild": "0.28.0",
     "node-pty": "1.1.0"
   }
 }

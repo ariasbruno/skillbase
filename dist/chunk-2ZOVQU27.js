@@ -1,0 +1,1 @@
+function l(n,...e){return n.some(t=>e.includes(t))}function u(n,...e){for(let t=0;t<n.length;t+=1)if(e.includes(n[t]))return n[t+1]??null;return null}function o(n,e=1){let t=n[e];return t&&!t.startsWith("-")?t:null}export{l as a,u as b,o as c};

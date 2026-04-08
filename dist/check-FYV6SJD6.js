@@ -1,0 +1,3 @@
+import{a as m}from"./chunk-2ZOVQU27.js";import{m as S}from"./chunk-QOTQZ7TO.js";import{A as C,G as n,H as g,I as s,l,m as _,o as $,p as c,q as o,r as e,y as a,z as E}from"./chunk-CQDRUBVP.js";async function H(T){console.log(`${o(g)}  ${e(l("CHECK_SEARCHING"))}`);let t=await S({remoteOnly:m(T,"--remote","-r")});if(!t.length){console.log(`${o(n)}  ${$(C)} ${l("CHECK_UP_TO_DATE")}`),console.log(`${o(s)}
+`);return}console.log(`${o(n)}  ${_(l("CHECK_UPDATES_FOUND"))}`),t.forEach(r=>{console.log(`${o(n)}  ${c(a)} ${r.name}: ${e(r.current??"?")} ${e(E)} ${$(r.latest)} ${e(`(${r.source})`)}`)}),console.log(`${o(n)}`),console.log(`${o(s)}  ${e(l("CHECK_UPDATE_HINT",{cmd:c("skillbase update")}))}
+`)}export{H as run};
